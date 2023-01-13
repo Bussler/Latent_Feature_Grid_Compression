@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+
+<Xdmf Version="2.0">
+
+  <Domain>
+
+    <Grid Name="Pressure" GridType="Collection" CollectionType="Temporal">
+
+      <Grid Name="Structured Grid" GridType="Uniform">
+
+        <Time Value="1" />
+
+        <Topology TopologyType="3DRectMesh" NumberOfElements="255 255 255"/>
+
+        <Geometry GeometryType="VXVYVZ">
+
+          <DataItem Name="Xcoor" Dimensions="255" NumberType="Float" Precision="4" Format="HDF">
+
+            mhd1024.h5:/xcoor
+
+          </DataItem>
+
+          <DataItem Name="Ycoor" Dimensions="255" NumberType="Float" Precision="4" Format="HDF">
+
+            mhd1024.h5:/ycoor
+
+          </DataItem>
+
+          <DataItem Name="Zcoor" Dimensions="255" NumberType="Float" Precision="4" Format="HDF">
+
+            mhd1024.h5:/zcoor
+
+          </DataItem>
+
+        </Geometry>
+
+
+
+        <Attribute Name="Pressure" AttributeType="Scalar" Center="Node">
+
+          <DataItem Dimensions="255 255 255 1" NumberType="Float" Precision="4" Format="HDF">
+
+            mhd1024.h5:/Pressure_0001
+
+          </DataItem>
+
+        </Attribute>
+
+      </Grid>
+
+
+
+    </Grid>
+
+  </Domain>
+
+</Xdmf>
+
