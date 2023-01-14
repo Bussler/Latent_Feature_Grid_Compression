@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from model.Feature_Embedding import Embedder
 
 
 def SnakeAlt(x):
@@ -8,10 +9,12 @@ def SnakeAlt(x):
 
 
 class Feature_Grid_Model(nn.Module):
-    def __init__(self, input_channel=31, hidden_channel=32, out_channel=1, num_layer=4):
+    def __init__(self, embedder: Embedder, input_channel_data=3, hidden_channel=32, out_channel=1, num_layer=4):
         super(Feature_Grid_Model, self).__init__()
 
-        self.input_channel = input_channel
+        self.embedder = embedder
+
+        self.input_channel = input_channel_data + embedder.out_dim
         self.hidden_width = hidden_channel
         self.output_channel = out_channel
         self.num_layer = num_layer
@@ -34,8 +37,7 @@ class Feature_Grid_Model(nn.Module):
         features_grid = torch.ones(16)  # M: TODO test data
 
         # M: enhance entry with fourier-features
-
-        embedded_features = torch.empty(12).uniform_(0, 1)  # M: TODO test data
+        embedded_features = self.embedder.embed(input)
 
         x = torch.cat([input, embedded_features, features_grid], -1)
 
