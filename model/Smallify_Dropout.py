@@ -21,6 +21,7 @@ class SmallifyLoss(nn.Module):
     def _collect_penalties(self, m: nn.Module):
         if isinstance(m, SmallifyDropout):
             self._penalties_l1.append(m.l1_loss())
+            pass
         if isinstance(m, nn.Linear):
             pass  # M: TODO
         if isinstance(m, Feature_Grid_Model):
@@ -50,7 +51,7 @@ class SmallifyDropout(DropoutLayer):
 
     def forward(self, x):
         if self.training:
-            x = x.mul(self.betas)  # M: No inverse scaling needed here, since we mult betas with nw after training
+            x = x.mul(self.betas.unsqueeze(0))  # M: No inverse scaling needed here, since we mult betas with nw after training
             self.tracker.sign_variance_pruning_onlyVar(self.betas)
             # M: TODO maybe set values directly to 0? Or only prune in the end
         return x

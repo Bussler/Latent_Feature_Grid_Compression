@@ -94,8 +94,8 @@ class Feature_Grid_Model(nn.Module):
     # M: creates spatial representation of wavelet feature grid
     def decode_volume(self) -> torch.Tensor:
         restored = self.drop[0](self.feature_grid[0]).unsqueeze(0)
-        for high_freq, drop, shape in zip(self.feature_grid[1:], self.drop[1:], self.shape_array):
-            high_freq = drop(high_freq)
+        for high_freq, drop_l, shape in zip(self.feature_grid[1:], self.drop[1:], self.shape_array):
+            high_freq = drop_l(high_freq)
             data = torch.cat([restored.unsqueeze(2), high_freq.unsqueeze(0)], dim=2)
             restored = self.filter.decode(data, shape)
         return restored[0]

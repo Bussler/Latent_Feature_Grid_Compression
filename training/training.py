@@ -151,7 +151,7 @@ def training(args, verbose=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'])
     lrStrategy = lrdecay.LearningRateDecayStrategy.create_instance(args, optimizer)
     loss_criterion = torch.nn.MSELoss().to(device)
-    drop_loss = SmallifyLoss(weight_l1=1.e-6, weight_l2=0.)
+    drop_loss = SmallifyLoss(weight_l1=1.e-8, weight_l2=1.e-8)
 
     # M: Setup Tensorboard writer
     global writer
