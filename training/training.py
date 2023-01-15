@@ -6,13 +6,15 @@ from model.Feature_Embedding import FourierEmbedding
 from data.IndexDataset import get_tensor, IndexDataset
 import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation
+from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = None
 
 
-def solve_model(model_init, optimizer, lr_strategy, loss_criterion, volume, dataset, data_loader, args, verbose=True):
+def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
+                volume, dataset, data_loader, args, verbose=True):
 
     model = model_init
     voxel_seen = 0.0
@@ -53,7 +55,8 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, volume, data
 
             # M: Loss calculation
             vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
-            complete_loss = vol_loss
+            d_loss = drop_loss(model)
+            complete_loss = vol_loss + d_loss
 
             complete_loss.backward()
             optimizer.step()
@@ -63,7 +66,7 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, volume, data
                 lr_decay_stop = True
                 break
 
-            # M: Debugging
+            # M: TODO Debugging
 
             if (int(volume_passes)) >= args['max_pass']:
                 break
@@ -80,12 +83,17 @@ def training(args, verbose=True):
     volume = volume.to(device)
 
     # M: Setup Latent_Feature_Grid
+    size_tensor = (16, 32, 32, 32)
+    feature_grid = torch.empty(size_tensor).uniform_(0, 1)
+
+    # M: Setup Drop-Layer for grid
+    drop_layer = SmallifyDropout(feature_grid.shape[1:])
 
     # M: Setup Embedder
     embedder = FourierEmbedding(n_freqs=2, input_dim=3)
 
     # M: Setup model
-    model = Feature_Grid_Model(embedder)
+    model = Feature_Grid_Model(embedder, feature_grid, drop_layer)
     model.to(device)
     model.train()
 
@@ -93,6 +101,7 @@ def training(args, verbose=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'])
     lrStrategy = lrdecay.LearningRateDecayStrategy.create_instance(args, optimizer)
     loss_criterion = torch.nn.MSELoss().to(device)
+    drop_loss = SmallifyLoss(weight_l1=1.e-6, weight_l2=0.)
 
-    model = solve_model(model, optimizer, lrStrategy, loss_criterion, volume,
+    model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
                            dataset, data_loader, args, verbose)

@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from model.Feature_Embedding import Embedder
+from torch.nn import functional as F
+from model.Dropout_Layer import DropoutLayer
 
 
 def SnakeAlt(x):
@@ -9,12 +11,15 @@ def SnakeAlt(x):
 
 
 class Feature_Grid_Model(nn.Module):
-    def __init__(self, embedder: Embedder, input_channel_data=3, hidden_channel=32, out_channel=1, num_layer=4):
+    def __init__(self, embedder: Embedder, feature_grid, drop_layer: DropoutLayer,
+                 input_channel_data=3, hidden_channel=32, out_channel=1, num_layer=4):
         super(Feature_Grid_Model, self).__init__()
 
         self.embedder = embedder
+        self.feature_grid = torch.nn.Parameter(feature_grid, requires_grad=True)
+        self.drop = drop_layer
 
-        self.input_channel = input_channel_data + embedder.out_dim
+        self.input_channel = input_channel_data + embedder.out_dim + self.feature_grid.shape[0]
         self.hidden_width = hidden_channel
         self.output_channel = out_channel
         self.num_layer = num_layer
@@ -29,21 +34,23 @@ class Feature_Grid_Model(nn.Module):
     def forward(self, input):
 
         # M: multiply feature grid with mask
+        feature_grid_samples = self.drop(self.feature_grid)  # M: TODO: look that values are mult correctly!
+        # M: TODO: look that feature grid entries are mult with their dropchances in the end!
+
+        # M: TODO decode feature grid
 
         # M: interpolate feature entry
-
-        # M: decode feature entry
-
-        features_grid = torch.ones(16)  # M: TODO test data
+        grid = input.view(1, 1, 1, *input.shape)
+        feature_grid_samples = F.grid_sample(feature_grid_samples.unsqueeze(0), grid,
+                                             mode='bilinear', align_corners=False).squeeze().transpose_(0, 1)  # M: TODO: look that values are interpolated correctly!
 
         # M: enhance entry with fourier-features
         embedded_features = self.embedder.embed(input)
 
-        x = torch.cat([input, embedded_features, features_grid], -1)
+        x = torch.cat([input, embedded_features, feature_grid_samples], -1)
 
         # M: pass new x through NW
         for ndx, net_layer in enumerate(self.net_layers):
-            # M: TODO: activation function!
             x = SnakeAlt(net_layer(x))
 
         x = self.final_layer(x)
