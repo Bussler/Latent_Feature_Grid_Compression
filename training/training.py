@@ -10,6 +10,7 @@ from data.Interpolation import trilinear_f_interpolation
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 from visualization.OutputToVTK import tiled_net_out
 from model.model_utils import write_dict
+from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -94,7 +95,7 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
             # M: Loss calculation
             vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
             d_loss = drop_loss(model)
-            complete_loss = vol_loss + d_loss
+            complete_loss = vol_loss# + d_loss
 
             complete_loss.backward()
             optimizer.step()
@@ -132,6 +133,9 @@ def training(args, verbose=True):
     size_tensor = (16, 32, 32, 32)
     feature_grid = torch.empty(size_tensor).uniform_(0, 1)
 
+    # M: Setup wavelet_filter
+    wavelet_filter = WaveletFilter3d('db2')
+
     # M: Setup Drop-Layer for grid
     drop_layer = SmallifyDropout(feature_grid.shape[1:])
 
@@ -139,7 +143,7 @@ def training(args, verbose=True):
     embedder = FourierEmbedding(n_freqs=2, input_dim=3)
 
     # M: Setup model
-    model = Feature_Grid_Model(embedder, feature_grid, drop_layer)
+    model = Feature_Grid_Model(embedder, feature_grid, drop_layer, wavelet_filter)
     model.to(device)
     model.train()
 
