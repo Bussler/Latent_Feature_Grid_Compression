@@ -35,23 +35,36 @@ class Feature_Grid_Model(nn.Module):
 
         # M: multiply feature grid with mask
         feature_grid_samples = self.drop(self.feature_grid)  # M: TODO: look that values are mult correctly!
-        # M: TODO: look that feature grid entries are mult with their dropchances in the end!
 
         # M: TODO decode feature grid
 
         # M: interpolate feature entry
+        if not self.training:  # M: TODO refactor this
+            orig_shape = input.shape
+            input = input.squeeze()
+            input = input.view(input.shape[0]*input.shape[1]*input.shape[2], input.shape[3])
+
         grid = input.view(1, 1, 1, *input.shape)
         feature_grid_samples = F.grid_sample(feature_grid_samples.unsqueeze(0), grid,
-                                             mode='bilinear', align_corners=False).squeeze().transpose_(0, 1)  # M: TODO: look that values are interpolated correctly!
+                                             mode='bilinear', align_corners=False).squeeze().transpose_(0, 1)
 
         # M: enhance entry with fourier-features
         embedded_features = self.embedder.embed(input)
 
-        x = torch.cat([input, embedded_features, feature_grid_samples], -1)
+        x = torch.cat([input, embedded_features, feature_grid_samples], -1) #feature_grid_samples
 
         # M: pass new x through NW
         for ndx, net_layer in enumerate(self.net_layers):
             x = SnakeAlt(net_layer(x))
 
         x = self.final_layer(x)
+
+        if not self.training:
+            x = x.view(orig_shape[0:-1],1)
+
         return x
+
+    def save_dropvalues_on_grid(self, device):
+        mask = self.drop.calculate_pruning_mask(device) * self.drop.betas
+        f_grid = self.feature_grid * mask
+        self.feature_grid = torch.nn.Parameter(f_grid, requires_grad=True)

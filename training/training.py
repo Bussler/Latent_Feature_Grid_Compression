@@ -94,7 +94,7 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
             # M: Loss calculation
             vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
             d_loss = drop_loss(model)
-            complete_loss = vol_loss #+ d_loss
+            complete_loss = vol_loss + d_loss
 
             complete_loss.backward()
             optimizer.step()
@@ -158,6 +158,8 @@ def training(args, verbose=True):
 
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
                            dataset, data_loader, args, verbose)
+
+    model.save_dropvalues_on_grid(device)
 
     info = evaluate_model_training(model, dataset, volume, args, verbose)
     writer.close()

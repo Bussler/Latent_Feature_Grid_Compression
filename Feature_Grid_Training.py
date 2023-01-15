@@ -2,7 +2,7 @@ from training.training import training
 
 
 if __name__ == '__main__':
-    args={'expname': 'Test_NOGrid_WithFEmbedding',
+    args={'expname': 'Test_WithGrid_WithFEmbedding_SmallifyDrop',
           'basedir': '/experiments/Tests/ImplTests/',
           'data': 'datasets/test_vol.npy',
           'd_in': 3,
