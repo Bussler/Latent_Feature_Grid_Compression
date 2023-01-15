@@ -1,4 +1,5 @@
 import torch
+import os
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from model.Feature_Grid_Model import Feature_Grid_Model
@@ -7,10 +8,47 @@ from data.IndexDataset import get_tensor, IndexDataset
 import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
+from visualization.OutputToVTK import tiled_net_out
+from model.model_utils import write_dict
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = None
+
+
+def evaluate_model_training(model, dataset, volume, args, verbose=True):
+    psnr, l1_diff, mse, rmse = tiled_net_out(dataset, model, True, gt_vol=volume.cpu(), evaluate=True, write_vols=False)
+
+    info = {}
+    num_net_params = 0
+    for layer in model.parameters():
+        num_net_params += layer.numel()
+    compression_ratio = dataset.n_voxels / num_net_params
+    compr_rmse = compression_ratio / rmse
+
+    if verbose:
+        print("Trained Model: ", num_net_params, " parameters; ", compression_ratio, " compression ratio")
+
+    info['volume_size'] = dataset.vol_res.tolist()
+    info['volume_num_voxels'] = dataset.n_voxels
+    info['num_parameters'] = num_net_params
+    info['compression_ratio'] = compression_ratio
+    info['psnr'] = psnr
+    info['l1_diff'] = l1_diff
+    info['mse'] = mse
+    info['rmse'] = rmse
+    info['compr_rmse'] = compr_rmse
+
+    # M: Safe more data
+
+    ExperimentPath = os.path.abspath(os.getcwd()) + args['basedir'] + args['expname'] + '/'
+    os.makedirs(ExperimentPath, exist_ok=True)
+
+    #torch.save(model.state_dict(), os.path.join(ExperimentPath, 'model.pth'))
+    write_dict(info, 'info.txt', ExperimentPath)
+    write_dict(args, 'config.txt', ExperimentPath)
+
+    return info
 
 
 def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
@@ -56,7 +94,7 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
             # M: Loss calculation
             vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
             d_loss = drop_loss(model)
-            complete_loss = vol_loss + d_loss
+            complete_loss = vol_loss #+ d_loss
 
             complete_loss.backward()
             optimizer.step()
@@ -66,7 +104,15 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                 lr_decay_stop = True
                 break
 
-            # M: TODO Debugging
+            # M: Debugging
+            writer.add_scalar("loss", complete_loss.item(), step_iter)
+            writer.add_scalar("volume_loss", vol_loss.item(), step_iter)
+            writer.add_scalar("drop_loss", d_loss.item(), step_iter)
+
+            # M: Print training statistics:
+            if idx % 100 == 0 and verbose:
+                print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.format(
+                    volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))
 
             if (int(volume_passes)) >= args['max_pass']:
                 break
@@ -103,5 +149,16 @@ def training(args, verbose=True):
     loss_criterion = torch.nn.MSELoss().to(device)
     drop_loss = SmallifyLoss(weight_l1=1.e-6, weight_l2=0.)
 
+    # M: Setup Tensorboard writer
+    global writer
+    if args['Tensorboard_log_dir']:
+        writer = SummaryWriter(args['Tensorboard_log_dir'])
+    else:
+        writer = SummaryWriter('runs/'+args['expname'])
+
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
                            dataset, data_loader, args, verbose)
+
+    info = evaluate_model_training(model, dataset, volume, args, verbose)
+    writer.close()
+    return info
