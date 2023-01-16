@@ -1,0 +1,26 @@
+expname = Test_Pass80_Field32_16_WithGrid_WithFEmbedding_WithSmallifyDrop_WithWavelet
+data = datasets/test_vol.npy
+basedir = /experiments/Tests/ImplTests/
+Tensorboard_log_dir = runs/Tests/implTestNW
+
+d_in = 3
+d_out = 1
+
+n_layers = 4
+n_hidden_size = 32
+checkpoint_path = ''
+
+embedding_type = fourier
+n_embedding_freq = 2
+drop_type = smallify
+wavelet_filter = db2
+grid_features = 16
+grid_size = 32
+
+lr = 0.008
+max_pass = 75
+pass_decay = 20
+lr_decay = 0.2
+
+batch_size = 1024
+sample_size = 16

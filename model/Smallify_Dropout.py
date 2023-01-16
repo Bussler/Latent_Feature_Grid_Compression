@@ -22,8 +22,6 @@ class SmallifyLoss(nn.Module):
         if isinstance(m, SmallifyDropout):
             self._penalties_l1.append(m.l1_loss())
             pass
-        if isinstance(m, nn.Linear):
-            pass  # M: TODO
         if isinstance(m, Feature_Grid_Model):
             self._penalties_l2.append(sum([torch.sum(torch.abs(f) ** 2) for f in m.feature_grid]))
 

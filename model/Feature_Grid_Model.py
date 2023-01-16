@@ -25,7 +25,7 @@ class Feature_Grid_Model(nn.Module):
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in features])
         self.shape_array = shapes
 
-        self.drop = nn.ParameterList([drop_layer.create_instance(
+        self.drop = nn.ModuleList([drop_layer.create_instance(
             f.shape[1:], drop_layer.p, drop_layer.threshold) for f in features])
 
         self.input_channel = input_channel_data + embedder.out_dim + feature_grid.shape[0]
@@ -65,7 +65,7 @@ class Feature_Grid_Model(nn.Module):
         for ndx, net_layer in enumerate(self.net_layers):
             x = SnakeAlt(net_layer(x))
 
-        x = self.final_layer(x)
+        x = self.final_layer(x)  # M: If not training: clamp between [-1,1]
 
         if not self.training:
             x = x.view(orig_shape[0:-1],1)

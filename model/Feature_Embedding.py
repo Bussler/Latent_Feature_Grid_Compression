@@ -12,7 +12,7 @@ class Embedder:
         pass
 
     def embed(self, inputs):
-        embedded = torch.cat([fn(inputs) for fn in self.embed_functions], -1)
+        embedded = torch.cat([fn(inputs) for fn in self.embed_functions], -1)  # M: TODO refactor? All Freqbands in one matrix and cat for sin/ cos parts
         return embedded
 
 
@@ -26,7 +26,7 @@ class FourierEmbedding(Embedder):
 
     def create_embedding_function(self, n_freqs, input_dim):
         freq_bands = 2. ** torch.linspace(0., n_freqs-1, steps=n_freqs)
-        freq_bands *= 2. * np.pi
+        freq_bands = freq_bands * 2. * np.pi
 
         for freq in freq_bands:
             for p_fn in self.periodic_functions:

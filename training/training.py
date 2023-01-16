@@ -9,7 +9,7 @@ import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 from visualization.OutputToVTK import tiled_net_out
-from model.model_utils import write_dict
+from model.model_utils import write_dict, setup_model
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
 
 
@@ -22,6 +22,8 @@ def evaluate_model_training(model, dataset, volume, args, verbose=True):
 
     info = {}
     num_net_params = 0
+    #model.drop = None  # M: TODO: Find a better way
+    #l = list(model.parameters())
     for layer in model.parameters():
         num_net_params += layer.numel()
     compression_ratio = dataset.n_voxels / num_net_params
@@ -129,21 +131,9 @@ def training(args, verbose=True):
                              num_workers=args['num_workers'])  # M: create dataloader from dataset to use in training
     volume = volume.to(device)
 
-    # M: Setup Latent_Feature_Grid
-    size_tensor = (16, 32, 32, 32)
-    feature_grid = torch.empty(size_tensor).uniform_(0, 1)
-
-    # M: Setup wavelet_filter
-    wavelet_filter = WaveletFilter3d('db2')
-
-    # M: Setup Drop-Layer for grid
-    drop_layer = SmallifyDropout(feature_grid.shape[1:])
-
-    # M: Setup Embedder
-    embedder = FourierEmbedding(n_freqs=2, input_dim=3)
-
-    # M: Setup model
-    model = Feature_Grid_Model(embedder, feature_grid, drop_layer, wavelet_filter)
+    model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
+                        args['n_embedding_freq'], args['drop_type'], args['wavelet_filter'], args['grid_features'],
+                        args['grid_size'], args['checkpoint_path'])
     model.to(device)
     model.train()
 
