@@ -24,7 +24,7 @@ def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding
 
     # M: Setup Drop-Layer for grid
     if drop_type and drop_type == 'smallify':
-        drop_layer = SmallifyDropout(feature_grid.shape[1:])
+        drop_layer = SmallifyDropout(size=feature_grid.shape[1:])
     else:
         drop_layer = None
 
@@ -32,7 +32,7 @@ def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding
     if embedding_type and embedding_type == 'fourier':
         embedder = FourierEmbedding(n_freqs=n_embedding_freq, input_dim=input_channel)
     else:
-        embedder = None
+        embedder = FourierEmbedding(n_freqs=n_embedding_freq, input_dim=input_channel)
 
     # M: Setup model
     model = Feature_Grid_Model(embedder, feature_grid, drop_layer, wavelet_filter, input_channel_data=input_channel,

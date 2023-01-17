@@ -1,4 +1,4 @@
-expname = Test_Pass80_Field32_16_WithGrid_WithFEmbedding_WithSmallifyDrop_WithWavelet
+expname = Test_Pass80_Field24_16_WithGrid_WithFEmbedding_WithSmallifyDrop_WithWavelet
 data = datasets/test_vol.npy
 basedir = /experiments/Tests/ImplTests/
 Tensorboard_log_dir = runs/Tests/implTestNW
@@ -21,6 +21,9 @@ lr = 0.008
 max_pass = 75
 pass_decay = 20
 lr_decay = 0.2
+
+lambda_drop_loss = 1.e-8
+lambda_weight_loss = 1.e-8
 
 batch_size = 1024
 sample_size = 16

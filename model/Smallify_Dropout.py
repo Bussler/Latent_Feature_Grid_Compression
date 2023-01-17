@@ -38,9 +38,8 @@ class SmallifyLoss(nn.Module):
 
 class SmallifyDropout(DropoutLayer):
 
-    def __init__(self, size, sign_variance_momentum=0.02, threshold=0.9):
-        super(SmallifyDropout, self).__init__(sign_variance_momentum, threshold)
-        self.c = size
+    def __init__(self, size=(1,1,1), sign_variance_momentum=0.02, threshold=0.9):
+        super(SmallifyDropout, self).__init__(size, sign_variance_momentum, threshold)
         self.betas = torch.nn.Parameter(torch.empty(size).normal_(0, 1),
                                         requires_grad=True)  # M: uniform_ or normal_
         #self.betas = torch.nn.Parameter(torch.ones(size),
@@ -59,10 +58,6 @@ class SmallifyDropout(DropoutLayer):
 
     def calculate_pruning_mask(self, device):
         return self.tracker.calculate_pruning_mask(device)
-
-    @classmethod
-    def create_instance(cls, size, sign_variance_momentum=0.02, threshold = 0.9):
-        return SmallifyDropout(size, sign_variance_momentum, threshold)
 
 
 class SmallifySignVarianceTracker():

@@ -17,30 +17,40 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = None
 
 
-def evaluate_model_training(model, dataset, volume, args, verbose=True):
+def evaluate_model_training(model, dataset, volume, zeros, args, verbose=True):
     psnr, l1_diff, mse, rmse = tiled_net_out(dataset, model, True, gt_vol=volume.cpu(), evaluate=True, write_vols=False)
 
     info = {}
     num_net_params = 0
-    #model.drop = None  # M: TODO: Find a better way
-    #l = list(model.parameters())
+    model.drop = None  # M: TODO: Find a better way
+
     for layer in model.parameters():
         num_net_params += layer.numel()
-    compression_ratio = dataset.n_voxels / num_net_params
+    compression_ratio = dataset.n_voxels / (num_net_params-zeros.item())
     compr_rmse = compression_ratio / rmse
 
     if verbose:
-        print("Trained Model: ", num_net_params, " parameters; ", compression_ratio, " compression ratio")
+        print("Trained Model: ", num_net_params, " parameters; ", zeros.item(), 'of them Zero; ',
+              compression_ratio, " compression ratio")
+        print("Model: \n", model)
 
     info['volume_size'] = dataset.vol_res.tolist()
     info['volume_num_voxels'] = dataset.n_voxels
     info['num_parameters'] = num_net_params
+    info['num_zeros'] = zeros.item()
     info['compression_ratio'] = compression_ratio
     info['psnr'] = psnr
     info['l1_diff'] = l1_diff
     info['mse'] = mse
     info['rmse'] = rmse
     info['compr_rmse'] = compr_rmse
+
+    writer.add_scalar("compression_ratio", compression_ratio)
+    writer.add_scalar("zeroes", zeros.item())
+    writer.add_scalar("psnr", psnr)
+    writer.add_scalar("mse", mse)
+    writer.add_scalar("rmse", rmse)
+    writer.add_scalar("compr_rmse", compr_rmse)
 
     # M: Safe more data
 
@@ -141,7 +151,7 @@ def training(args, verbose=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'])
     lrStrategy = lrdecay.LearningRateDecayStrategy.create_instance(args, optimizer)
     loss_criterion = torch.nn.MSELoss().to(device)
-    drop_loss = SmallifyLoss(weight_l1=1.e-8, weight_l2=1.e-8)
+    drop_loss = SmallifyLoss(weight_l1=args['lambda_drop_loss'], weight_l2=args['lambda_weight_loss'])
 
     # M: Setup Tensorboard writer
     global writer
@@ -151,10 +161,10 @@ def training(args, verbose=True):
         writer = SummaryWriter('runs/'+args['expname'])
 
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
-                           dataset, data_loader, args, verbose)
+                        dataset, data_loader, args, verbose)
 
-    model.save_dropvalues_on_grid(device)
+    zeros = model.save_dropvalues_on_grid(device)
 
-    info = evaluate_model_training(model, dataset, volume, args, verbose)
+    info = evaluate_model_training(model, dataset, volume, zeros, args, verbose)
     writer.close()
     return info

@@ -25,8 +25,11 @@ class Feature_Grid_Model(nn.Module):
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in features])
         self.shape_array = shapes
 
-        self.drop = nn.ModuleList([drop_layer.create_instance(
-            f.shape[1:], drop_layer.p, drop_layer.threshold) for f in features])
+        if drop_layer is None:
+            self.drop = nn.ModuleList([nn.Identity() for f in features])
+        else:
+            self.drop = nn.ModuleList([drop_layer.create_instance(
+                f.shape[1:], drop_layer.p, drop_layer.threshold) for f in features])
 
         self.input_channel = input_channel_data + embedder.out_dim + feature_grid.shape[0]
         self.hidden_width = hidden_channel
@@ -104,3 +107,8 @@ class Feature_Grid_Model(nn.Module):
         masks = [d.calculate_pruning_mask(device) * d.betas for d in self.drop]
         f_grid = [grid * mask for grid, mask in zip(self.feature_grid, masks)]
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
+
+        zeros = 0
+        for mask in masks:
+            zeros += (mask.numel() - torch.count_nonzero(mask))
+        return zeros

@@ -32,6 +32,9 @@ def config_parser():
                              'Every smallify_decay - epochs without improvement, the learning rate'
                              'is divided by 10 up until 1e-7. Default: 0 to turn option off')
 
+    parser.add_argument('--lambda_drop_loss', type=float, default=1.e-8, help='weighting of drop-loss')
+    parser.add_argument('--lambda_weight_loss', type=float, default=1.e-8, help='weighting of weight-loss')
+
     parser.add_argument('--d_in', type=int, default=3, help='spatial input dimension')
     parser.add_argument('--d_out', type=int, default=1, help='spatial output dimension')
     parser.add_argument('--n_hidden_size', type=int, default=32, help='size of hidden layers in network')
