@@ -47,6 +47,9 @@ def config_parser():
                                                                         ' frequency embedding')
     parser.add_argument('--drop_type', type=str, default='smallify',
                         help='Type of dropout algorithm to use. Options are: <smallify>,')
+    parser.add_argument('--drop_momentum', type=float, default=0.025, help='momentum of dropout technique')
+    parser.add_argument('--drop_threshold', type=float, default=0.075, help='threshold of dropout technique')
+
     parser.add_argument('--wavelet_filter', type=str, default='db2', help='checkpoint from where to load model')
     parser.add_argument('--grid_features', type=int, default=16,
                         help='Amount of features at each point in feature grid')

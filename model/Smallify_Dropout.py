@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.nn.functional import linear
 import numpy as np
 from model.Dropout_Layer import DropoutLayer
+from model.Straight_Through_Dropout import MaskedWavelet_Straight_Through_Dropout, Straight_Through_Dropout
 from model.Feature_Grid_Model import Feature_Grid_Model
 
 
@@ -21,7 +22,10 @@ class SmallifyLoss(nn.Module):
     def _collect_penalties(self, m: nn.Module):
         if isinstance(m, SmallifyDropout):
             self._penalties_l1.append(m.l1_loss())
-            pass
+        if isinstance(m, MaskedWavelet_Straight_Through_Dropout):
+            self._penalties_l1.append(m.l1_loss())
+        if isinstance(m, Straight_Through_Dropout):
+            self._penalties_l1.append(m.l1_loss())
         if isinstance(m, Feature_Grid_Model):
             self._penalties_l2.append(sum([torch.sum(torch.abs(f) ** 2) for f in m.feature_grid]))
 
@@ -38,7 +42,7 @@ class SmallifyLoss(nn.Module):
 
 class SmallifyDropout(DropoutLayer):
 
-    def __init__(self, size=(1,1,1), sign_variance_momentum=0.02, threshold=0.9):
+    def __init__(self, size=(1,1,1), sign_variance_momentum=0.025, threshold=0.75):
         super(SmallifyDropout, self).__init__(size, sign_variance_momentum, threshold)
         self.betas = torch.nn.Parameter(torch.empty(size).normal_(0, 1),
                                         requires_grad=True)  # M: uniform_ or normal_
@@ -58,6 +62,12 @@ class SmallifyDropout(DropoutLayer):
 
     def calculate_pruning_mask(self, device):
         return self.tracker.calculate_pruning_mask(device)
+
+    def multiply_values_with_dropout(self, input, device):
+        with torch.no_grad():
+            mask = self.calculate_pruning_mask(device) * self.betas
+            f_grid = input * mask
+            return f_grid
 
 
 class SmallifySignVarianceTracker():

@@ -71,7 +71,7 @@ class Feature_Grid_Model(nn.Module):
         x = self.final_layer(x)  # M: If not training: clamp between [-1,1]
 
         if not self.training:
-            x = x.view(orig_shape[0:-1],1)
+            x = x.view(orig_shape[0:-1],1).clamp(-1, 1)  # M: clamp between values [-1, 1] here to omit outliers
 
         return x
 
@@ -104,11 +104,12 @@ class Feature_Grid_Model(nn.Module):
         return restored[0]
 
     def save_dropvalues_on_grid(self, device):
-        masks = [d.calculate_pruning_mask(device) * d.betas for d in self.drop]
-        f_grid = [grid * mask for grid, mask in zip(self.feature_grid, masks)]
+        f_grid = [d.multiply_values_with_dropout(grid, device) for grid, d in zip(self.feature_grid, self.drop)]
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
 
+        self.drop = nn.ModuleList([nn.Identity() for f in f_grid])  # M: remove droplayers
+
         zeros = 0
-        for mask in masks:
-            zeros += (mask.numel() - torch.count_nonzero(mask))
+        for grid in f_grid:
+            zeros += (grid.numel() - torch.count_nonzero(grid))
         return zeros

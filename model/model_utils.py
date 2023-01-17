@@ -3,6 +3,7 @@ import torch
 from model.Feature_Grid_Model import Feature_Grid_Model
 from model.Feature_Embedding import FourierEmbedding
 from model.Smallify_Dropout import SmallifyDropout
+from model.Straight_Through_Dropout import MaskedWavelet_Straight_Through_Dropout, Straight_Through_Dropout
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
 
 
@@ -13,7 +14,7 @@ def write_dict(dictionary, filename, experiment_path=''):
 
 
 def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding_type, n_embedding_freq, drop_type,
-                wavelet_filter, grid_features, grid_size, checkpoint_path):
+                drop_momentum, drop_threshold, wavelet_filter, grid_features, grid_size, checkpoint_path):
 
     # M: Setup Latent_Feature_Grid
     size_tensor = (grid_features, grid_size, grid_size, grid_size)
@@ -23,8 +24,13 @@ def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding
     wavelet_filter = WaveletFilter3d(wavelet_filter)
 
     # M: Setup Drop-Layer for grid
-    if drop_type and drop_type == 'smallify':
-        drop_layer = SmallifyDropout(size=feature_grid.shape[1:])
+    if drop_type:
+        if drop_type == 'smallify':
+            drop_layer = SmallifyDropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
+        if drop_type == 'straight_through':
+            drop_layer = Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
+        if drop_type == 'masked_straight_through':
+            drop_layer = MaskedWavelet_Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
     else:
         drop_layer = None
 

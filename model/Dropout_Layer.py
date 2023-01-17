@@ -15,6 +15,9 @@ class DropoutLayer(torch.nn.Module):
     def calculate_pruning_mask(self, device):
         pass
 
+    def multiply_values_with_dropout(self, input, device):
+        pass
+
     @classmethod
     def create_instance(cls, size, sign_variance_momentum=0.02, threshold=0.9):
         return cls(size, sign_variance_momentum, threshold)

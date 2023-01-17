@@ -106,7 +106,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Loss calculation
             vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
-            d_loss = drop_loss(model)
+
+            if drop_loss is not None:
+                d_loss = drop_loss(model)
+            else:
+                d_loss = 0
             complete_loss = vol_loss + d_loss
 
             complete_loss.backward()
@@ -142,8 +146,8 @@ def training(args, verbose=True):
     volume = volume.to(device)
 
     model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
-                        args['n_embedding_freq'], args['drop_type'], args['wavelet_filter'], args['grid_features'],
-                        args['grid_size'], args['checkpoint_path'])
+                        args['n_embedding_freq'], args['drop_type'], args['drop_momentum'], args['drop_threshold'],
+                        args['wavelet_filter'], args['grid_features'], args['grid_size'], args['checkpoint_path'])
     model.to(device)
     model.train()
 
@@ -164,6 +168,8 @@ def training(args, verbose=True):
                         dataset, data_loader, args, verbose)
 
     zeros = model.save_dropvalues_on_grid(device)
+
+    # M: Also try Finetuning!
 
     info = evaluate_model_training(model, dataset, volume, zeros, args, verbose)
     writer.close()
