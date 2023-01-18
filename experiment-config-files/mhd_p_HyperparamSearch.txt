@@ -1,0 +1,33 @@
+expname = Test
+data = datasets/mhd1024.h5
+basedir = /experiments/Tests/ImplTests/
+Tensorboard_log_dir = runs/Tests/implTestNW
+
+d_in = 3
+d_out = 1
+
+n_layers = 4
+n_hidden_size = 32
+checkpoint_path = ''
+
+embedding_type = fourier
+n_embedding_freq = 2
+
+drop_type = smallify
+drop_momentum = 0.025
+drop_threshold = 0.75
+
+wavelet_filter = db2
+grid_features = 16
+grid_size = 32
+
+lr = 0.008
+max_pass = 20
+pass_decay = 20
+lr_decay = 0.2
+
+lambda_drop_loss = 1.e-8
+lambda_weight_loss = 1.e-8
+
+batch_size = 1024
+sample_size = 16
