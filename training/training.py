@@ -161,6 +161,7 @@ def training(args, verbose=True):
     global writer
     if args['Tensorboard_log_dir']:
         writer = SummaryWriter(args['Tensorboard_log_dir'])
+        write_dict(args, 'config.txt', args['Tensorboard_log_dir'])
     else:
         writer = SummaryWriter('runs/'+args['expname'])
 
@@ -169,7 +170,7 @@ def training(args, verbose=True):
 
     zeros = model.save_dropvalues_on_grid(device)
 
-    # M: Also try Finetuning!
+    # M: TODO Also try Finetuning!
 
     info = evaluate_model_training(model, dataset, volume, zeros, args, verbose)
     writer.close()
