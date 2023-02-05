@@ -104,6 +104,11 @@ class Feature_Grid_Model(nn.Module):
         return restored[0]
 
     def save_dropvalues_on_grid(self, device):
+
+        # M: Identity functions don't introduce zeroes
+        if isinstance(self.drop[0], nn.Identity):
+            return torch.tensor(0, dtype=torch.float32)
+
         f_grid = [d.multiply_values_with_dropout(grid, device) for grid, d in zip(self.feature_grid, self.drop)]
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
 
