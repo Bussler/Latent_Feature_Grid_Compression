@@ -11,6 +11,7 @@ from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 from visualization.OutputToVTK import tiled_net_out
 from model.model_utils import write_dict, setup_model
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
+from copy import deepcopy
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -165,12 +166,23 @@ def training(args, verbose=True):
     else:
         writer = SummaryWriter('runs/'+args['expname'])
 
+    # M: Training and finetuning
+    args_first = deepcopy(args)
+    args_first['max_pass'] *= (2.0 / 3.0)
+
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
-                        dataset, data_loader, args, verbose)
+                        dataset, data_loader, args_first, verbose)
 
     zeros = model.save_dropvalues_on_grid(device)
 
-    # M: TODO Also try Finetuning!
+    # M: Finetuning
+    args_second = deepcopy(args)
+    args_second['max_pass'] *= (1.0 / 3.0)
+    args_second['dropout_technique'] = ''
+    optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'] / 100.0)
+
+    model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
+                        dataset, data_loader, args_second, verbose)
 
     info = evaluate_model_training(model, dataset, volume, zeros, args, verbose)
     writer.close()
