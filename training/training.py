@@ -23,10 +23,10 @@ def evaluate_model_training(model, dataset, volume, zeros, args, verbose=True):
 
     info = {}
     num_net_params = 0
-    model.drop = None  # M: TODO: Find a better way
 
-    for layer in model.parameters():
-        num_net_params += layer.numel()
+    for name, layer in model.named_parameters():
+        if 'drop' not in name:
+            num_net_params += layer.numel()
     compression_ratio = dataset.n_voxels / (num_net_params-zeros.item())
     compr_rmse = compression_ratio / rmse
 
@@ -58,7 +58,9 @@ def evaluate_model_training(model, dataset, volume, zeros, args, verbose=True):
     ExperimentPath = os.path.abspath(os.getcwd()) + args['basedir'] + args['expname'] + '/'
     os.makedirs(ExperimentPath, exist_ok=True)
 
-    #torch.save(model.state_dict(), os.path.join(ExperimentPath, 'model.pth'))
+    torch.save(model.state_dict(), os.path.join(ExperimentPath, 'model.pth'))
+    args['checkpoint_path'] = os.path.join(ExperimentPath, 'model.pth')
+
     write_dict(info, 'info.txt', ExperimentPath)
     write_dict(args, 'config.txt', ExperimentPath)
 
