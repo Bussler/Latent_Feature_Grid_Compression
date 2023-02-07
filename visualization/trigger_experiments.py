@@ -5,10 +5,10 @@ import visualization.pltUtils as pu
 
 
 def neurcompRunsDiffComprRatesFromFrontier():
-    BASENAME = 'experiments/NAS/mhd_p_Smallify/mhd_p_'
+    BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
     experimentNames = np.linspace(0, 79, 80, dtype=int)
 
-    new_base_dir = '/experiments/NAS/mhd_p_Smallify_Pateto_Finetuning/'
+    new_base_dir = '/experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/'
 
     InfoName = 'info.txt'
     configName = 'config.txt'

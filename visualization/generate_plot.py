@@ -11,26 +11,17 @@ from itertools import product
 
 
 def generateParetoFrontier():
-    BASENAME = 'experiments/NAS/mhd_p_Smallify/mhd_p_'
+    BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
     experimentNames = np.linspace(0, 79, 80, dtype=int)
     #experimentNames = np.delete(experimentNames, 5, axis=0)
     #experimentNames = np.delete(experimentNames, 5, axis=0)
 
-    BASENAMEOther = 'experiments/NAS/mhd_p_Smallify_WithFinetuning/mhd_p_'
-    experimentNamesOther = np.linspace(0, 49, 50, dtype=int)
+    BASENAMEOther = 'experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/mhd_p_'
+    #experimentNamesOther = np.linspace(0, 49, 50, dtype=int)
+    experimentNamesOther = [14,16,31,34,36,37,39,42,50,53,55,56,58,59,63,64,66,67,70,75,76]
 
     BASENAMEUnpruned = 'experiments/NAS/mhd_p_baseline/mhd_p_'
     experimentNamesUnpruned = np.linspace(0, 49, 60, dtype=int)
-    #experimentNamesUnpruned = [221, 227, 246, 299, 327, 393, 503, 628]
-    #experimentNamesUnpruned = [122, 135, 157, 198, 225, 292, 386, 534, 602, 781, 984, 1087]
-
-    #BASENAMEUnpruned = 'experiments/diff_comp_rates/mhd_p_Baselines/100/mhd_p_'
-    #experimentNamesUnpruned = [102, 144, 166, 211, 253, 268, 283, 293, 325, 363, 414, 442, 474, 512, 617, 638,
-    #                           797, 895]
-    #experimentNamesUnpruned = [210, 225, 235, 244, 296, 388, 463, 546, 596, 770, 931, 1251]
-    #BASENAMEUnpruned = 'experiments/diff_comp_rates/mhd_p_Baselines/100_ForVariational/mhd_p_'
-    #experimentNamesUnpruned = [105, 194, 283, 303, 311, 371, 468, 511, 603, 715, 808, 945, 1354]
-
 
     InfoName = 'info.txt'
     configName = 'config.txt'
@@ -114,7 +105,7 @@ def generateParetoFrontier():
     #for p in pf_X:
     #    print(p)
 
-    filepath = 'plots/' + 'mhd_p_' + 'Smallify_Finetuning' + '.png'
+    filepath = 'plots/' + 'mhd_p_' + 'MaskStraightThrough_Finetuning' + '.png'
     plt.savefig(filepath)
 
 
