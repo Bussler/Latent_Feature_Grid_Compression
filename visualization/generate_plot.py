@@ -11,13 +11,13 @@ from itertools import product
 
 
 def generateParetoFrontier():
-    BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
+    BASENAME = 'experiments/NAS/mhd_p_Smallify/mhd_p_'
     experimentNames = np.linspace(0, 79, 80, dtype=int)
     #experimentNames = np.delete(experimentNames, 5, axis=0)
     #experimentNames = np.delete(experimentNames, 5, axis=0)
 
-    BASENAMEOther = 'experiments/NAS/mhd_p_Smallify/mhd_p_'
-    experimentNamesOther = np.linspace(0, 79, 80, dtype=int)
+    BASENAMEOther = 'experiments/NAS/mhd_p_Smallify_WithFinetuning/mhd_p_'
+    experimentNamesOther = np.linspace(0, 49, 50, dtype=int)
 
     BASENAMEUnpruned = 'experiments/NAS/mhd_p_baseline/mhd_p_'
     experimentNamesUnpruned = np.linspace(0, 49, 60, dtype=int)
@@ -101,8 +101,8 @@ def generateParetoFrontier():
             new_pf_XUnpruned.append(i)
             new_pf_YUnpruned.append(k)
 
-    plt.plot(new_pf_X, new_pf_Y, label='Pareto_Frontier Straight Through', color='green')
-    plt.plot(new_pf_XFinetuning, new_pf_YFinetuning, label='Pareto_Frontier Smallify', color='blue')
+    plt.plot(new_pf_X, new_pf_Y, label='Pareto_Frontier Pruned', color='green')
+    plt.plot(new_pf_XFinetuning, new_pf_YFinetuning, label='Pareto_Frontier Pruned With Finetuning', color='blue')
     #plt.scatter(newCompr, newPSNR, color='green', alpha =0.2)
     plt.plot(new_pf_XUnpruned, new_pf_YUnpruned, label='Baseline Unpruned', color='red')
 
@@ -114,7 +114,7 @@ def generateParetoFrontier():
     #for p in pf_X:
     #    print(p)
 
-    filepath = 'plots/' + 'mhd_p_' + 'Smallify_VSMaskedStraightThrough_VS_baseline' + '.png'
+    filepath = 'plots/' + 'mhd_p_' + 'Smallify_Finetuning' + '.png'
     plt.savefig(filepath)
 
 
