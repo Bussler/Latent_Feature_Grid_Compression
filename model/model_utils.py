@@ -5,6 +5,7 @@ from model.Feature_Embedding import FourierEmbedding
 from model.Smallify_Dropout import SmallifyDropout
 from model.Straight_Through_Dropout import MaskedWavelet_Straight_Through_Dropout, Straight_Through_Dropout
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
+from model.Variational_Dropout_Layer import VariationalDropout
 
 
 def write_dict(dictionary, filename, experiment_path=''):
@@ -31,6 +32,8 @@ def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding
             drop_layer = Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
         if drop_type == 'masked_straight_through':
             drop_layer = MaskedWavelet_Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
+        if drop_type == 'variational':
+            drop_layer = VariationalDropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
     else:
         drop_layer = None
 

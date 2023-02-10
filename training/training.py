@@ -8,6 +8,7 @@ from data.IndexDataset import get_tensor, IndexDataset
 import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
+from model.Variational_Dropout_Layer import VariationalDropoutLoss, Variance_Model
 from visualization.OutputToVTK import tiled_net_out
 from model.model_utils import write_dict, setup_model
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
@@ -76,6 +77,12 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
+    if args['drop_type'] and args['drop_type'] == 'variational':
+        variance_model = Variance_Model()
+        variance_model.to(device)
+        variance_model.train()
+        optimizer.add_param_group({'params': variance_model.parameters()})
+
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
 
@@ -108,13 +115,22 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
             volume_passes = voxel_seen / dataset.n_voxels
 
             # M: Loss calculation
-            vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
+            if args['drop_type'] == 'variational':
+                variational_variance = variance_model(norm_positions)
+                variational_variance = variational_variance.squeeze(-1)
+                weight_dkl_multiplier = 5e-03
 
-            if drop_loss is not None:
-                d_loss = drop_loss(model)
+                complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
+                                                                                    ground_truth_volume,
+                                                                                    variational_variance,
+                                                                                    weight_dkl_multiplier)
             else:
-                d_loss = 0
-            complete_loss = vol_loss + d_loss
+                vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
+                if drop_loss is not None:
+                    d_loss = drop_loss(model)
+                else:
+                    d_loss = 0
+                complete_loss = vol_loss + d_loss
 
             complete_loss.backward()
             optimizer.step()
@@ -125,14 +141,25 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                 break
 
             # M: Debugging
-            writer.add_scalar("loss", complete_loss.item(), step_iter)
-            writer.add_scalar("volume_loss", vol_loss.item(), step_iter)
-            writer.add_scalar("drop_loss", d_loss.item(), step_iter)
+            if args['drop_type'] == 'variational':
+                writer.add_scalar("loss", complete_loss, step_iter)
+                writer.add_scalar("volume_loss", mse, step_iter)
+                writer.add_scalar("Log_Likelyhood_loss", Log_Likelyhood, step_iter)
+                writer.add_scalar("DKL_loss", Dkl_sum, step_iter)
+                writer.add_scalar("Weight_loss", weight_sum, step_iter)
+            else:
+                writer.add_scalar("loss", complete_loss.item(), step_iter)
+                writer.add_scalar("volume_loss", vol_loss.item(), step_iter)
+                writer.add_scalar("drop_loss", d_loss.item(), step_iter)
 
             # M: Print training statistics:
             if idx % 100 == 0 and verbose:
-                print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.format(
-                    volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))
+                if args['drop_type'] == 'variational':
+                    print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, LL: {:.4f}, DKL: {:.4f}, complete_loss: {:.4f}'.
+                          format(volume_passes, args['max_pass'], mse, Log_Likelyhood, Dkl_sum, complete_loss))
+                else:
+                    print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.
+                          format(volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))
 
             if (int(volume_passes)) >= args['max_pass']:
                 break
@@ -158,7 +185,13 @@ def training(args, verbose=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'])
     lrStrategy = lrdecay.LearningRateDecayStrategy.create_instance(args, optimizer)
     loss_criterion = torch.nn.MSELoss().to(device)
-    drop_loss = SmallifyLoss(weight_l1=args['lambda_drop_loss'], weight_l2=args['lambda_weight_loss'])
+    if args['drop_type'] == 'variational':
+        drop_loss = VariationalDropoutLoss(size_volume=dataset.n_voxels,
+                                           batch_size=args['batch_size']*args['sample_size'],
+                                           weight_dkl=args['lambda_drop_loss'],
+                                           weight_weights=args['lambda_weight_loss'])
+    else:
+        drop_loss = SmallifyLoss(weight_l1=args['lambda_drop_loss'], weight_l2=args['lambda_weight_loss'])
 
     # M: Setup Tensorboard writer
     global writer
