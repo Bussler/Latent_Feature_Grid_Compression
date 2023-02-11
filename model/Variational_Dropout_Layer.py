@@ -30,30 +30,10 @@ def calculate_Log_Likelihood_variance(predicted_volume, ground_truth_volume, var
     return a * (-x_mu_loss) + b, x_mu_loss
 
 
-def calculate_variational_dropout_loss(model, n_samples_in_Volume, predicted_volume, ground_truth_volume, log_sigma,
-                                    lambda_dkl, lambda_weights, lambda_entropy):
-    Dkl_sum = 0.0
-    Entropy_sum = 0.0
-    for module in model.net_layers.modules():
-        if isinstance(module, VariationalDropout):
-            Dkl_sum = Dkl_sum + module.calculate_Dkl()
-    Dkl_sum = lambda_dkl * (n_samples_in_Volume/predicted_volume.shape[0]) * Dkl_sum  # M: TODO scaling!
-    weight_loss = lambda_weights * (n_samples_in_Volume/predicted_volume.shape[0]) * calculte_weight_loss(model)
-
-    # M: iter over all values
-    Log_Likelyhood, mse = calculate_Log_Likelihood_variance(predicted_volume, ground_truth_volume, log_sigma)
-    Log_Likelyhood = Log_Likelyhood.sum() * (n_samples_in_Volume/predicted_volume.shape[0])
-    mse = mse.sum() * (1/predicted_volume.shape[0])
-
-    complete_loss = -(Log_Likelyhood - Dkl_sum - weight_loss)# - Entropy_sum)
-
-    return complete_loss, Dkl_sum, Log_Likelyhood, mse, weight_loss
-
-
 class VariationalDropoutLoss(nn.Module):
 
     def __init__(self, size_volume: float, batch_size: float, weight_dkl: float = 1., weight_weights: float = 1.,
-                 weight_dkl_max=50.0):
+                 weight_dkl_max=30.0):
         super(VariationalDropoutLoss, self).__init__()
         self.batch_scale = (size_volume/batch_size)
         self.weight_dkl = float(weight_dkl)
