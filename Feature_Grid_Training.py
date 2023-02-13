@@ -35,6 +35,11 @@ def config_parser():
     parser.add_argument('--lambda_drop_loss', type=float, default=1.e-8, help='weighting of drop-loss')
     parser.add_argument('--lambda_weight_loss', type=float, default=1.e-8, help='weighting of weight-loss')
 
+    parser.add_argument('--weight_dkl_multiplier', type=float, default=5e-04,
+                        help='Ramp up of dkl weighting for variational dropout')
+    parser.add_argument('--variational_sigma', type=float, default=-7.0,
+                        help='Static value for variational prediction sigma')
+
     parser.add_argument('--d_in', type=int, default=3, help='spatial input dimension')
     parser.add_argument('--d_out', type=int, default=1, help='spatial output dimension')
     parser.add_argument('--n_hidden_size', type=int, default=32, help='size of hidden layers in network')

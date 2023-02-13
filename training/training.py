@@ -119,13 +119,12 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                 #variational_variance = variance_model(norm_positions)
                 #variational_variance = variational_variance.squeeze(-1)
 
-                variational_variance = torch.ones_like(predicted_volume).fill_(-7.0)
-                weight_dkl_multiplier = 5e-04
+                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
                                                                                     variational_variance,
-                                                                                    weight_dkl_multiplier)
+                                                                                    args['weight_dkl_multiplier'])
             else:
                 vol_loss = loss_criterion(predicted_volume, ground_truth_volume)
                 if drop_loss is not None:
@@ -160,18 +159,18 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, LL: {:.4f}, DKL: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], mse, Log_Likelyhood, Dkl_sum, complete_loss))
 
-                    valid_fraction = []
-                    droprates = []
-                    for module in model.drop.modules():
-                        if isinstance(module, VariationalDropout):
-                            d, dropr = module.get_valid_fraction()
-                            valid_fraction.append(d)
-                            droprates.append(dropr)
-                    writer.add_histogram("droprates_layer1", droprates[0], step_iter)
-                    writer.add_histogram("droprates_layer2", droprates[1], step_iter)
-                    writer.add_histogram("droprates_layer3", droprates[2], step_iter)
-                    writer.add_histogram("droprates_layer4", droprates[3], step_iter)
-                    print('Valid Fraction: ', valid_fraction)
+                    #valid_fraction = []
+                    #droprates = []
+                    #for module in model.drop.modules():
+                    #    if isinstance(module, VariationalDropout):
+                    #        d, dropr = module.get_valid_fraction()
+                    #        valid_fraction.append(d)
+                    #        droprates.append(dropr)
+                    #writer.add_histogram("droprates_layer1", droprates[0], step_iter)
+                    #writer.add_histogram("droprates_layer2", droprates[1], step_iter)
+                    #writer.add_histogram("droprates_layer3", droprates[2], step_iter)
+                    #writer.add_histogram("droprates_layer4", droprates[3], step_iter)
+                    #print('Valid Fraction: ', valid_fraction)
                 else:
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))

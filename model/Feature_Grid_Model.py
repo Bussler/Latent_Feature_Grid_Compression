@@ -6,6 +6,7 @@ from model.Feature_Embedding import Embedder
 from torch.nn import functional as F
 from model.Dropout_Layer import DropoutLayer
 from wavelet_transform.Torch_Wavelet_Transform import _WaveletFilterNd
+from model.Variational_Dropout_Layer import decode_variational_parameter, VariationalDropout
 
 
 def SnakeAlt(x):
@@ -48,6 +49,12 @@ class Feature_Grid_Model(nn.Module):
         # M: decode feature grid
         # feature_grid_samples = self.drop(self.feature_grid)
         feature_grid_samples = self.decode_volume()
+
+        # M: reparameterization trick in case of variational dropout
+        #if isinstance(self.drop[0], VariationalDropout):
+        #    variational_random_noise = decode_variational_parameter(self.drop, self.filter, self.shape_array)
+        #    feature_grid_samples = feature_grid_samples * variational_random_noise
+
 
         # M: interpolate feature entry
         if not self.training:  # M: TODO refactor this

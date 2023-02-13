@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import math
 import torch.nn.functional as F
-from model.Feature_Grid_Model import Feature_Grid_Model
+import model.Feature_Grid_Model as feature_grid_model
 from model.Dropout_Layer import DropoutLayer
 
 
@@ -48,7 +48,7 @@ class VariationalDropoutLoss(nn.Module):
     def _collect_penalties(self, m: nn.Module):
         if isinstance(m, VariationalDropout):
             self.DKL.append(m.calculate_Dkl())
-        if isinstance(m, Feature_Grid_Model):
+        if isinstance(m, feature_grid_model.Feature_Grid_Model):
             self.weight_loss.append(sum([torch.sum(torch.abs(f) ** 2) for f in m.feature_grid]))
 
     def forward(self, model: nn.Module, predicted_volume, ground_truth_volume, log_sigma, weight_dkl_multiplier):
@@ -67,6 +67,28 @@ class VariationalDropoutLoss(nn.Module):
 
         self._reset_penalties()
         return loss, Log_Likelyhood, mse, Dkl_sum, weight_sum
+
+
+def decode_variational_parameter(variational_layer, filter, shape_array):
+    restored_thetas = variational_layer[0].log_thetas.unsqueeze(0).unsqueeze(0)
+    for layer, shape in zip(variational_layer[1:], shape_array):
+        high_freq = layer.log_thetas
+        data = torch.cat([restored_thetas, high_freq.unsqueeze(0)], dim=1)
+        restored_thetas = filter.decode(data.unsqueeze(0), shape)
+    r_thetas = restored_thetas[0]
+
+    restored_variances = variational_layer[0].log_var.unsqueeze(0).unsqueeze(0)
+    for layer, shape in zip(variational_layer[1:], shape_array):
+        high_freq = layer.log_var
+        data = torch.cat([restored_variances, high_freq.unsqueeze(0)], dim=1)
+        restored_variances = filter.decode(data.unsqueeze(0), shape)
+    r_variances = restored_variances[0]
+
+    thetas = torch.exp(r_thetas)  # M: revert the log with exp
+    sigma = torch.exp(r_variances / 2.0)
+    xi = torch.randn_like(thetas)  # M: draw xi from N(0,1)
+    w = thetas + sigma * xi  # M: maybe have to unsqueeze(0)
+    return w
 
 
 class VariationalDropout(DropoutLayer):
@@ -110,9 +132,11 @@ class VariationalDropout(DropoutLayer):
         # M: w = theta * (1+sqrt(alpha)*xi)
         # M: w = theta + sigma * xi according to Molchanov additive noise reparamerization
         thetas = torch.exp(self.log_thetas)  # M: revert the log with exp
-        xi = torch.randn_like(x)  # M: draw xi from N(0,1)
+        #xi = torch.randn_like(x)  # M: draw xi from N(0,1)
+        xi = torch.randn_like(thetas)
         w = thetas + self.sigma * xi  # M: maybe have to unsqueeze(0)
         return x * w
+        #return x
 
     def calculate_Dkl(self):
         log_alphas = self.log_var - 2.0 * self.log_thetas
