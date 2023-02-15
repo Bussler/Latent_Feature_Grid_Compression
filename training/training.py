@@ -77,11 +77,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
-    #if args['drop_type'] and args['drop_type'] == 'variational':
-    #    variance_model = Variance_Model()
-    #    variance_model.to(device)
-    #    variance_model.train()
-    #    optimizer.add_param_group({'params': variance_model.parameters()})
+    if args['drop_type'] and args['drop_type'] == 'variational':
+        variance_model = Variance_Model()
+        variance_model.to(device)
+        variance_model.train()
+        optimizer.add_param_group({'params': variance_model.parameters()})
 
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
@@ -116,10 +116,10 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Loss calculation
             if args['drop_type'] == 'variational':
-                #variational_variance = variance_model(norm_positions)
-                #variational_variance = variational_variance.squeeze(-1)
+                variational_variance = variance_model(norm_positions)
+                variational_variance = variational_variance.squeeze(-1)
 
-                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
+                #variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
@@ -199,13 +199,16 @@ def training(args, verbose=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'])
     lrStrategy = lrdecay.LearningRateDecayStrategy.create_instance(args, optimizer)
     loss_criterion = torch.nn.MSELoss().to(device)
-    if args['drop_type'] == 'variational':
-        drop_loss = VariationalDropoutLoss(size_volume=dataset.n_voxels,
-                                           batch_size=args['batch_size']*args['sample_size'],
-                                           weight_dkl=args['lambda_drop_loss'],
-                                           weight_weights=args['lambda_weight_loss'])
-    else:
-        drop_loss = SmallifyLoss(weight_l1=args['lambda_drop_loss'], weight_l2=args['lambda_weight_loss'])
+
+    drop_loss = None
+    if args['drop_type']:
+        if args['drop_type'] == 'variational':
+            drop_loss = VariationalDropoutLoss(size_volume=dataset.n_voxels,
+                                               batch_size=args['batch_size']*args['sample_size'],
+                                               weight_dkl=args['lambda_drop_loss'],
+                                               weight_weights=args['lambda_weight_loss'])
+        else:
+            drop_loss = SmallifyLoss(weight_l1=args['lambda_drop_loss'], weight_l2=args['lambda_weight_loss'])
 
     # M: Setup Tensorboard writer
     global writer
@@ -228,7 +231,7 @@ def training(args, verbose=True):
     args_second = deepcopy(args)
     args_second['max_pass'] *= (1.0 / 3.0)
     args_second['drop_type'] = ''
-    optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'] / 100.0)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'] / 10.0)
 
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, None, volume,
                         dataset, data_loader, args_second, verbose)

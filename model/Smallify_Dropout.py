@@ -49,23 +49,28 @@ class SmallifyDropout(DropoutLayer):
         #self.betas = torch.nn.Parameter(torch.ones(size),
         #                                requires_grad=True)
         self.tracker = SmallifySignVarianceTracker(self.c, sign_variance_momentum, threshold, self.betas)
+        self.d_mask = None
 
     def forward(self, x):
         if self.training:
-            x = x.mul(self.betas.unsqueeze(0))  # M: No inverse scaling needed here, since we mult betas with nw after training
-            self.tracker.sign_variance_pruning_onlyVar(self.betas)
-            # M: TODO maybe set values directly to 0? Or only prune in the end
+            if self.d_mask is None:
+                x = x.mul(self.betas.unsqueeze(0))  # M: No inverse scaling needed here, since we mult betas with nw after training
+                self.tracker.sign_variance_pruning_onlyVar(self.betas)
+            else:
+                x = x * self.d_mask.unsqueeze(0)
         return x
 
     def l1_loss(self):
         return torch.abs(self.betas).sum()
 
     def calculate_pruning_mask(self, device):
-        return self.tracker.calculate_pruning_mask(device)
+        mask = self.tracker.calculate_pruning_mask(device)
+        self.d_mask = mask  # M: store pruning mask, and after pruning only mult with this!
+        return mask
 
     def multiply_values_with_dropout(self, input, device):
         with torch.no_grad():
-            mask = self.calculate_pruning_mask(device) * self.betas
+            mask = self.calculate_pruning_mask(device) * self.betas.unsqueeze(0)
             f_grid = input * mask
             return f_grid
 

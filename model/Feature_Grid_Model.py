@@ -119,7 +119,7 @@ class Feature_Grid_Model(nn.Module):
         f_grid = [d.multiply_values_with_dropout(grid, device) for grid, d in zip(self.feature_grid, self.drop)]
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
 
-        self.drop = nn.ModuleList([nn.Identity() for f in f_grid])  # M: remove droplayers
+        #self.drop = nn.ModuleList([nn.Identity() for f in f_grid])  # M: remove droplayers
 
         zeros = 0
         for grid in f_grid:

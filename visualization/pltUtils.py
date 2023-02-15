@@ -151,7 +151,7 @@ def findParetoValues(Xs, Ys, BASENAME, experimentNames, maxX=True, maxY=True):
             info = dict_from_file(cName)
             if info['compression_ratio'] == c:
                 config = dict_from_file(foldername+'/'+configName)
-                #print(eN,': ', c, config['lr'], config['grad_lambda'], config['n_layers'])
+                print(eN,': ', c)
 
                 #pc = [c, config['lr'], config['grad_lambda'], config['n_layers']]
                 paretoConfigs.append(config)

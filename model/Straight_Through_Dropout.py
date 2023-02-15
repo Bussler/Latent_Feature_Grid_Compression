@@ -48,11 +48,16 @@ class MaskedWavelet_Straight_Through_Dropout(DropoutLayer):
     def __init__(self, size=(1, 1, 1), probability=0.5, threshold=0.5):
         super(MaskedWavelet_Straight_Through_Dropout, self).__init__(size, probability, threshold)
         self.mask_values = torch.nn.Parameter(torch.ones(size), requires_grad=True)  # M: uniform_ or normal_
+        self.d_mask = None
 
     def forward(self, x):
         if self.training:
             mask = torch.sigmoid(self.mask_values)
-            x = (x * (mask >= self.threshold) - x * mask).detach() + (x * mask)  # M: Need inverse scaling?
+
+            if self.d_mask is None:
+                x = (x * (mask >= self.threshold) - x * mask).detach() + (x * mask)  # M: Need inverse scaling?
+            else:
+                x = x * self.d_mask
         return x
 
     def l1_loss(self):
@@ -60,6 +65,7 @@ class MaskedWavelet_Straight_Through_Dropout(DropoutLayer):
 
     def calculate_pruning_mask(self, device):
         mask = torch.sigmoid(self.mask_values)
+        self.d_mask = (mask >= self.threshold).to(device)  # M: store pruning mask, and after pruning only mult with this!
         return mask
 
     def multiply_values_with_dropout(self, input, device):

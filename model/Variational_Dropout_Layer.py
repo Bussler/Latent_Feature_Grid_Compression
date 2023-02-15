@@ -33,7 +33,7 @@ def calculate_Log_Likelihood_variance(predicted_volume, ground_truth_volume, var
 class VariationalDropoutLoss(nn.Module):
 
     def __init__(self, size_volume: float, batch_size: float, weight_dkl: float = 1., weight_weights: float = 1.,
-                 weight_dkl_max=30.0):
+                 weight_dkl_max=30.0):  # 30.0
         super(VariationalDropoutLoss, self).__init__()
         self.batch_scale = (size_volume/batch_size)
         self.weight_dkl = float(weight_dkl)
@@ -108,6 +108,8 @@ class VariationalDropout(DropoutLayer):
         # M: log_var = 2*log_sigma; sigma^2 = exp(2*log_sigma) = theta^2 alpha
         self.log_var = torch.nn.Parameter(torch.empty(size).fill_(log_alphas), requires_grad=True)
 
+        self.d_mask = None
+
         #if VariationalDropout.i == 1:
         #    self.threshold = 0.9
         #if VariationalDropout.i == 2:
@@ -135,7 +137,11 @@ class VariationalDropout(DropoutLayer):
         #xi = torch.randn_like(x)  # M: draw xi from N(0,1)
         xi = torch.randn_like(thetas)
         w = thetas + self.sigma * xi  # M: maybe have to unsqueeze(0)
-        return x * w
+
+        if self.d_mask is None:
+            return x * w
+        else:
+            return x * self.d_mask
         #return x
 
     def calculate_Dkl(self):
@@ -167,6 +173,9 @@ class VariationalDropout(DropoutLayer):
 
             if prune_mask.numel() - torch.count_nonzero(prune_mask) == 0:
                 prune_mask.data[0] = 1.0
+
+            self.d_mask = prune_mask.to(device)  #M: store pruning mask, and after pruning only mult with this!
+
             return prune_mask.to(device)
 
     def multiply_values_with_dropout(self, input, device):
