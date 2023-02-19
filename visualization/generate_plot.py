@@ -9,6 +9,8 @@ from pltUtils import generate_array_MLFlow, dict_from_file, append_lists_from_di
 import numpy as np
 from itertools import product
 import tikzplotlib
+from data.IndexDataset import get_tensor, IndexDataset
+from model.model_utils import setup_model
 
 
 def generateParetoFrontier():
@@ -273,5 +275,47 @@ def HyperparamAnalysis():
     plt.savefig(filepath)
 
 
+def WeightHistogramm():
+    from model.Variational_Dropout_Layer import VariationalDropout
+    from model.Smallify_Dropout import SmallifyDropout
+    from model.Straight_Through_Dropout import MaskedWavelet_Straight_Through_Dropout
+    from data.IndexDataset import get_tensor, IndexDataset
+    from model.model_utils import setup_model
+    import torch
+
+    #Configpath = 'experiments/Test_DiffDropratesPerLayer/mhd_p_Variational_Static/Unpruned_Variational_Static_1/config.txt'
+    #Configpath = 'experiments/Test_DiffDropratesPerLayer/mhd_p_Variational_Dynamic/Unpruned_Variational_Dynamic_1/config.txt'
+    #Configpath = 'experiments/Test_DiffDropratesPerLayer/mhd_p_Smallify/Unpruned_Smallify_1/config.txt'
+    Configpath = 'experiments/Test_DiffDropratesPerLayer/mhd_p_Masked/Unpruned_Masked_1/config.txt'
+    args = dict_from_file(Configpath)
+
+    model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
+                        args['n_embedding_freq'], args['drop_type'], args['drop_momentum'], args['drop_threshold'],
+                        args['wavelet_filter'], args['grid_features'], args['grid_size'], args['checkpoint_path'])
+
+    layers = []
+    for layer in model.drop.modules():
+        #if isinstance(layer, Linear):
+        #    layers.append(layer.weight.data)
+        if isinstance(layer, VariationalDropout):
+            layers.append(layer.dropout_rates.detach().data.reshape(-1).numpy())
+        if isinstance(layer, SmallifyDropout):
+            layers.append(layer.betas.detach().data.reshape(-1).numpy())
+        if isinstance(layer, MaskedWavelet_Straight_Through_Dropout):
+            layers.append(torch.sigmoid(layer.mask_values).detach().data.reshape(-1).numpy())
+
+    fig, ax = plt.subplots(nrows=len(layers), ncols=1, figsize=(8, 8))
+    fig.tight_layout()
+
+    for i in range(len(layers)):
+        ax[i].hist(layers[i], bins=120, label=str(i))  # range=(-0.5, 0.5)
+        ax[i].title.set_text('Layer '+str(i))
+
+    filepath = 'plots/LatexFigures/AnalyseNWWeights/' + 'mhd_p_' + 'MaskedStraightThrough_1_' + 'Weight_Historgramm'
+    plt.savefig(filepath + '.png')
+    tikzplotlib.save(filepath + '.pgf')
+
+
 if __name__ == '__main__':
-    generateParetoFrontier()
+    #generateParetoFrontier()
+    WeightHistogramm()
