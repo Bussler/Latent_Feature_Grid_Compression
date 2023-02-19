@@ -157,3 +157,32 @@ def findParetoValues(Xs, Ys, BASENAME, experimentNames, maxX=True, maxY=True):
                 paretoConfigs.append(config)
 
     return paretoConfigs
+
+
+def generate_Parallel_Coordinate_Plot(df, filename, constraint_PSNR : []=None, constraint_Compression : []=None):
+    import plotly.graph_objects as go
+    import tikzplotlib
+
+    fig = go.Figure(data=
+    go.Parcoords(
+        line=dict(color=df['id'],
+                  colorscale=[[0, 'purple'], [0.5, 'lightseagreen'], [1, 'gold']]),
+        dimensions=list([
+            dict(label='Threshold Layer 1', values=df['Threshold Layer 1']),
+            dict(label='Threshold Layer 2', values=df['Threshold Layer 2']),
+            dict(label='Threshold Layer 3', values=df['Threshold Layer 3']),
+            dict(constraintrange=constraint_PSNR,
+                 label='PSNR', values=df['PSNR']),
+            dict(constraintrange=constraint_Compression,
+                 label='Compression Ratio', values=df['Compression Ratio'])
+        ])
+    )
+    )
+
+    fig.update_layout(
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+
+    fig.write_image(filename+'.png')
+    tikzplotlib.save(filename + '.pgf')

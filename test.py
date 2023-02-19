@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
 from model.model_utils import write_dict, setup_model
 from visualization.pltUtils import dict_from_file
+import visualization.pltUtils as pu
 
 def test_pywavelets():
     size_tensor = (64,64,64,32)
@@ -97,10 +98,66 @@ def analyse_coefficients():
     filepath = 'plots/Histogramms/' + 'test' + 'Feature_Historgramm_' + "Smallify" + '.png'
     plt.savefig(filepath)
 
+def analyse_paretor_frontier():
+    BASENAME = 'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'
+    experimentNames = np.linspace(0, 44, 45, dtype=int)
+
+    new_base_dir = '/experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/'
+
+    InfoName = 'info.txt'
+    configName = 'config.txt'
+
+    PSNR = []
+    CompressionRatio = []
+
+    pu.generate_plot_lists(([PSNR, CompressionRatio],),
+                           (['psnr', 'compression_ratio'],),
+                           BASENAME, (InfoName,), experiment_names=experimentNames)
+
+    configs = pu.findParetoValues(CompressionRatio, PSNR, BASENAME, experimentNames)
+    pass
+
+
+def create_parallel_coordinates():
+    import plotly.express as px
+    import ast
+
+    filename = 'experiments/Test_DiffDropratesPerLayer/Unpruned_Net_TestSet_WithEntropy/Results.txt'
+    file = open(filename, 'r')
+    Lines = file.readlines()
+
+    # create data
+    data = []
+    d1 = []
+    d2 = []
+    d3 = []
+    psnr = []
+    compr = []
+    x= np.linspace(0, 999, 1000, dtype=int)
+    for line in Lines:
+        d = ast.literal_eval(line)
+        data.append(d)
+        d1.append(d['pruning_threshold_list'][0])
+        d2.append(d['pruning_threshold_list'][1])
+        d3.append(d['pruning_threshold_list'][2])
+        psnr.append(d['psnr'])
+        compr.append(d['compression_ratio'])
+
+    df = {'id': x,
+          'Threshold Layer 1': d1,
+          'Threshold Layer 2': d2,
+          'Threshold Layer 3': d3,
+          'PSNR': psnr,
+          'Compression Ratio': compr}
+
+    filename = 'plots/LatexFigures/Var_Droprate_Analysis/ParallelCoordPlots/testvol_Unpruned_WithEntropy_Parallel_Coordinates_ConstrainCompr'
+    pu.generate_Parallel_Coordinate_Plot(df, filename, None, None)
+
 
 if __name__ == '__main__':
     #test_pywavelets()
     #analyse_Wavelet()
     #test_TensorWavelets()
-    analyse_coefficients()
+    #analyse_coefficients()
+    analyse_paretor_frontier()
 
