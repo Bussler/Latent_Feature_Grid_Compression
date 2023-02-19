@@ -8,20 +8,25 @@ from pltUtils import generate_array_MLFlow, dict_from_file, append_lists_from_di
     normalize_array_0_1, normalize_array, generate_orderedValues, generateMeanValues, plot_pareto_frontier
 import numpy as np
 from itertools import product
+import tikzplotlib
 
 
 def generateParetoFrontier():
-    BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
-    experimentNames = np.linspace(0, 79, 80, dtype=int)
-    #experimentNames = np.delete(experimentNames, 5, axis=0)
-    #experimentNames = np.delete(experimentNames, 5, axis=0)
+    BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'#'experiments/NAS/mhd_p_MaskedStraightThrough_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNames = np.linspace(0, 79, 80, dtype=int)#np.linspace(0, 49, 50, dtype=int)
 
-    BASENAMEOther = 'experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/mhd_p_'
-    #experimentNamesOther = np.linspace(0, 49, 50, dtype=int)
-    experimentNamesOther = [14,16,31,34,36,37,39,42,50,53,55,56,58,59,63,64,66,67,70,75,76]
+    BASENAMEOther = 'experiments/NAS/mhd_p_Smallify/mhd_p_'#'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNamesOther = np.linspace(0, 79, 80, dtype=int)
+    #experimentNamesOther = [14,16,31,34,36,37,39,42,50,53,55,56,58,59,63,64,66,67,70,75,76]
+
+    BASENAMEOther2 = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SearchNWArchitecture/mhd_p_'#'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNamesOther2 = np.linspace(0, 79, 80, dtype=int)#np.linspace(0, 54, 55, dtype=int)
+
+    BASENAMEOther3 = 'experiments/NAS/mhd_p_Variational_Static_WithFinetuning_Buggy/mhd_p_'#'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'
+    experimentNamesOther3 = np.linspace(0, 79, 80, dtype=int)#np.linspace(0, 44, 45, dtype=int)
 
     BASENAMEUnpruned = 'experiments/NAS/mhd_p_baseline/mhd_p_'
-    experimentNamesUnpruned = np.linspace(0, 49, 60, dtype=int)
+    experimentNamesUnpruned = np.linspace(0, 49, 50, dtype=int)
 
     InfoName = 'info.txt'
     configName = 'config.txt'
@@ -31,6 +36,12 @@ def generateParetoFrontier():
 
     PSNRFinetuning = []
     CompressionRatioFinetuning = []
+
+    PSNROther2 = []
+    CompressionRatioOther2 = []
+
+    PSNROther3 = []
+    CompressionRatioOther3 = []
 
     PSNRUnpruned = []
     CompressionRatioUnpruned = []
@@ -47,9 +58,19 @@ def generateParetoFrontier():
                         (['psnr', 'compression_ratio'],),
                         BASENAMEUnpruned, (InfoName,), experiment_names=experimentNamesUnpruned)
 
+    generate_plot_lists(([PSNROther2, CompressionRatioOther2],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAMEOther2, (InfoName,), experiment_names=experimentNamesOther2)
+
+    generate_plot_lists(([PSNROther3, CompressionRatioOther3],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAMEOther3, (InfoName,), experiment_names=experimentNamesOther3)
+
     pareto_front = plot_pareto_frontier(CompressionRatio, PSNR)
     pareto_frontFinetuning = plot_pareto_frontier(CompressionRatioFinetuning, PSNRFinetuning)
     pareto_frontUnpruned = plot_pareto_frontier(CompressionRatioUnpruned, PSNRUnpruned)
+    pareto_frontOther2 = plot_pareto_frontier(CompressionRatioOther2, PSNROther2)
+    pareto_frontOther3 = plot_pareto_frontier(CompressionRatioOther3, PSNROther3)
 
     '''Plotting process'''
     #plt.scatter(CompressionRatio, PSNR)
@@ -62,40 +83,64 @@ def generateParetoFrontier():
     pf_XUnpruned = [pair[0] for pair in pareto_frontUnpruned]
     pf_YUnpruned = [pair[1] for pair in pareto_frontUnpruned]
 
-    limit = 1200
+    pf_XOther2 = [pair[0] for pair in pareto_frontOther2]
+    pf_YOther2 = [pair[1] for pair in pareto_frontOther2]
+
+    pf_XOther3 = [pair[0] for pair in pareto_frontOther3]
+    pf_YOther3 = [pair[1] for pair in pareto_frontOther3]
+
+    upper_limit = 600
+    lower_limit = 0
 
     newCompr = []
     newPSNR = []
     for i, k in zip(CompressionRatio, PSNR):
-        if i < limit:
+        if i < upper_limit and i > lower_limit:
             newCompr.append(i)
             newPSNR.append(k)
 
     new_pf_X = []
     new_pf_Y = []
     for i,k in zip(pf_X, pf_Y):
-        if i < limit:
+        if i < upper_limit and i > lower_limit:
             new_pf_X.append(i)
             new_pf_Y.append(k)
 
     new_pf_XFinetuning = []
     new_pf_YFinetuning = []
     for i, k in zip(pf_XFinetuning, pf_YFinetuning):
-        if i < limit:
+        if i < upper_limit and i > lower_limit:
             new_pf_XFinetuning.append(i)
             new_pf_YFinetuning.append(k)
+
+    new_pf_XOther2 = []
+    new_pf_YOther2 = []
+    for i, k in zip(pf_XOther2, pf_YOther2):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XOther2.append(i)
+            new_pf_YOther2.append(k)
+
+    new_pf_XOther3 = []
+    new_pf_YOther3 = []
+    for i, k in zip(pf_XOther3, pf_YOther3):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XOther3.append(i)
+            new_pf_YOther3.append(k)
 
     new_pf_XUnpruned = []
     new_pf_YUnpruned = []
     for i, k in zip(pf_XUnpruned, pf_YUnpruned):
-        if i < limit:
+        if i < upper_limit and i > lower_limit:
             new_pf_XUnpruned.append(i)
             new_pf_YUnpruned.append(k)
 
-    plt.plot(new_pf_X, new_pf_Y, label='Pareto_Frontier Pruned', color='green')
-    plt.plot(new_pf_XFinetuning, new_pf_YFinetuning, label='Pareto_Frontier Pruned With Finetuning', color='blue')
+    plt.plot(new_pf_X, new_pf_Y, label='Pareto Frontier MaskedStraightThrough')
     #plt.scatter(newCompr, newPSNR, color='green', alpha =0.2)
-    plt.plot(new_pf_XUnpruned, new_pf_YUnpruned, label='Baseline Unpruned', color='red')
+    plt.plot(new_pf_XUnpruned, new_pf_YUnpruned, label='Baseline Unpruned')
+
+    plt.plot(new_pf_XFinetuning, new_pf_YFinetuning, label='Pareto Frontier Smallify')
+    plt.plot(new_pf_XOther2, new_pf_YOther2, label='Pareto Frontier Variational Dynamic')
+    plt.plot(new_pf_XOther3, new_pf_YOther3, label='Pareto Frontier Variational Static')
 
     plt.xlabel('Compression_Ratio')
     plt.ylabel('PSNR')
@@ -105,8 +150,10 @@ def generateParetoFrontier():
     #for p in pf_X:
     #    print(p)
 
-    filepath = 'plots/' + 'mhd_p_' + 'MaskStraightThrough_Finetuning' + '.png'
-    plt.savefig(filepath)
+    #filepath = 'plots/' + 'mhd_p_' + 'SetNWArch_DropComparisons' + '.png'
+    filepath = 'plots/LatexFigures/comprBaselines/mhd_p_DropComparison_SearchNWArch_Pruned_VS_Unpruned'
+    plt.savefig(filepath + '.png')
+    tikzplotlib.save(filepath + '.pgf')
 
 
 def HyperparamAnalysis():
