@@ -9,6 +9,7 @@ import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 from model.Variational_Dropout_Layer import VariationalDropoutLoss, Variance_Model, VariationalDropout
+from model.Dropout_Layer import DropoutLayer
 from visualization.OutputToVTK import tiled_net_out
 from model.model_utils import write_dict, setup_model
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
@@ -77,11 +78,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
-    if args['drop_type'] and args['drop_type'] == 'variational':
-        variance_model = Variance_Model()
-        variance_model.to(device)
-        variance_model.train()
-        optimizer.add_param_group({'params': variance_model.parameters()})
+    #if args['drop_type'] and args['drop_type'] == 'variational':
+    #    variance_model = Variance_Model()
+    #    variance_model.to(device)
+    #    variance_model.train()
+    #    optimizer.add_param_group({'params': variance_model.parameters()})
 
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
@@ -108,7 +109,6 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                                                             dataset.min_idx.to(device), dataset.max_idx.to(device),
                                                             dataset.vol_res.to(device))
 
-
             # M: Used for Learning rate decay
             prior_volume_passes = int(voxel_seen / dataset.n_voxels)
             voxel_seen += ground_truth_volume.shape[0]
@@ -116,10 +116,10 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Loss calculation
             if args['drop_type'] == 'variational':
-                variational_variance = variance_model(norm_positions)
-                variational_variance = variational_variance.squeeze(-1)
+                #variational_variance = variance_model(norm_positions)
+                #variational_variance = variational_variance.squeeze(-1)
 
-                #variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
+                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
@@ -159,18 +159,18 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, LL: {:.4f}, DKL: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], mse, Log_Likelyhood, Dkl_sum, complete_loss))
 
-                    #valid_fraction = []
-                    #droprates = []
-                    #for module in model.drop.modules():
-                    #    if isinstance(module, VariationalDropout):
-                    #        d, dropr = module.get_valid_fraction()
-                    #        valid_fraction.append(d)
-                    #        droprates.append(dropr)
-                    #writer.add_histogram("droprates_layer1", droprates[0], step_iter)
-                    #writer.add_histogram("droprates_layer2", droprates[1], step_iter)
-                    #writer.add_histogram("droprates_layer3", droprates[2], step_iter)
+                    valid_fraction = []
+                    droprates = []
+                    for module in model.drop.modules():
+                        if isinstance(module, VariationalDropout):
+                            d, dropr = module.get_valid_fraction()
+                            valid_fraction.append(d)
+                            droprates.append(dropr)
+                    writer.add_histogram("droprates_layer1", droprates[0], step_iter)
+                    writer.add_histogram("droprates_layer2", droprates[1], step_iter)
+                    writer.add_histogram("droprates_layer3", droprates[2], step_iter)
                     #writer.add_histogram("droprates_layer4", droprates[3], step_iter)
-                    #print('Valid Fraction: ', valid_fraction)
+                    print('Valid Fraction: ', valid_fraction)
                 else:
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))
@@ -188,6 +188,8 @@ def training(args, verbose=True):
     data_loader = DataLoader(dataset, batch_size=args['batch_size'], shuffle=True,
                              num_workers=args['num_workers'])  # M: create dataloader from dataset to use in training
     volume = volume.to(device)
+
+    DropoutLayer.set_threshold_list(args['pruning_threshold_list'])
 
     model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
                         args['n_embedding_freq'], args['drop_type'], args['drop_momentum'], args['drop_threshold'],

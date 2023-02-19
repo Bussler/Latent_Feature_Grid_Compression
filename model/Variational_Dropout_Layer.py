@@ -33,7 +33,7 @@ def calculate_Log_Likelihood_variance(predicted_volume, ground_truth_volume, var
 class VariationalDropoutLoss(nn.Module):
 
     def __init__(self, size_volume: float, batch_size: float, weight_dkl: float = 1., weight_weights: float = 1.,
-                 weight_dkl_max=30.0):  # 30.0
+                 weight_dkl_max=30.0):  # 30.0, 5
         super(VariationalDropoutLoss, self).__init__()
         self.batch_scale = (size_volume/batch_size)
         self.weight_dkl = float(weight_dkl)
@@ -109,14 +109,6 @@ class VariationalDropout(DropoutLayer):
         self.log_var = torch.nn.Parameter(torch.empty(size).fill_(log_alphas), requires_grad=True)
 
         self.d_mask = None
-
-        #if VariationalDropout.i == 1:
-        #    self.threshold = 0.9
-        #if VariationalDropout.i == 2:
-        #    self.threshold = 0.5
-        #if VariationalDropout.i == 3:
-        #    self.threshold = 0.80
-        #VariationalDropout.i = VariationalDropout.i +1
 
     @property
     def alphas(self):

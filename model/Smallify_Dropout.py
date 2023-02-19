@@ -48,7 +48,7 @@ class SmallifyDropout(DropoutLayer):
                                         requires_grad=True)  # M: uniform_ or normal_
         #self.betas = torch.nn.Parameter(torch.ones(size),
         #                                requires_grad=True)
-        self.tracker = SmallifySignVarianceTracker(self.c, sign_variance_momentum, threshold, self.betas)
+        self.tracker = SmallifySignVarianceTracker(self.c, sign_variance_momentum, self.threshold, self.betas)
         self.d_mask = None
 
     def forward(self, x):
