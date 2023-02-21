@@ -16,11 +16,11 @@ tick align=outside,
 tick pos=left,
 x grid style={darkgray176},
 xlabel={Compression\_Ratio},
-xmin=96.2371031998062, xmax=616.141393207166,
+xmin=35.8689381596899, xmax=619.016067732886,
 xtick style={color=black},
 y grid style={darkgray176},
 ylabel={PSNR},
-ymin=33.4369575500488, ymax=41.8481071472168,
+ymin=33.3417284011841, ymax=43.8479192733765,
 ytick style={color=black}
 ]
 \addplot [semithick, steelblue31119180]
@@ -48,6 +48,9 @@ table {%
 192.694654270773 37.0186653137207
 159.672736552202 38.3217964172363
 119.869116381959 38.9774780273438
+85.4406164817668 39.0552940368652
+67.9183204512221 41.1851654052734
+62.3756258675625 43.3703651428223
 };
 \addlegendentry{Baseline Unpruned}
 \addplot [semithick, forestgreen4416044]
