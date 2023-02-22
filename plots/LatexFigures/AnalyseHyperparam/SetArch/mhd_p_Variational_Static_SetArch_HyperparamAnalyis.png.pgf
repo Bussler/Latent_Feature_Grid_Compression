@@ -1,0 +1,313 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{green}{RGB}{0,128,0}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{orange}{RGB}{255,165,0}
+\definecolor{violet}{RGB}{238,130,238}
+
+\begin{groupplot}[group style={group size=6 by 2}]
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={DKL Multiplier},
+x grid style={darkgray176},
+xlabel={DKL Multiplier},
+xmin=-0.00249931317507402, xmax=0.0524999672940511,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, green]
+table {%
+5e-05 659.220570110921
+5e-05 592.509380025013
+5e-05 541.715671861217
+5e-05 497.744874373368
+5e-05 425.239786628369
+0.05 293.740810288933
+6.54118977126869e-07 235.849157243439
+1.86561738584109e-05 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={pSigma},
+x grid style={darkgray176},
+xlabel={pSigma},
+xmin=-8.19156523179263, xmax=-2.75278260800987,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, blue]
+table {%
+-3 659.220570110921
+-3.1 592.509380025013
+-3.2 541.715671861217
+-3.3 497.744874373368
+-3.5 425.239786628369
+-5.62822884633321 293.740810288933
+-5.03462152183056 235.849157243439
+-7.9443478398025 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Lambda Droploss},
+x grid style={darkgray176},
+xlabel={Lambda Droploss},
+xmin=-0.021275308192726, xmax=1.28909937993321,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, orange]
+table {%
+1 659.220570110921
+1 592.509380025013
+1 541.715671861217
+1 497.744874373368
+1 425.239786628369
+0.641572239382979 293.740810288933
+1.22953689410931 235.849157243439
+0.0382871776311803 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Lambda Weightloss},
+x grid style={darkgray176},
+xlabel={Lambda Weightloss},
+xmin=0.842409387906082, xmax=2.05512336248066,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, red]
+table {%
+2 659.220570110921
+2 592.509380025013
+2 541.715671861217
+2 497.744874373368
+2 425.239786628369
+1.46486263806301 293.740810288933
+1.20913369301707 235.849157243439
+0.897532750386745 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Momentum},
+x grid style={darkgray176},
+xlabel={Momentum},
+xmin=0.075, xmax=0.625,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, violet]
+table {%
+0.1 659.220570110921
+0.1 592.509380025013
+0.1 541.715671861217
+0.1 497.744874373368
+0.1 425.239786628369
+0.6 293.740810288933
+0.418478628527373 235.849157243439
+0.205218006297946 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Threshold},
+x grid style={darkgray176},
+xlabel={Threshold},
+xmin=0.631605263622478, xmax=0.912780701732263,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, black]
+table {%
+0.9 659.220570110921
+0.9 592.509380025013
+0.9 541.715671861217
+0.9 497.744874373368
+0.9 425.239786628369
+0.712586229165526 293.740810288933
+0.897240464622155 235.849157243439
+0.644385965354741 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={DKL Multiplier},
+x grid style={darkgray176},
+xlabel={DKL Multiplier},
+xmin=-0.00249931317507402, xmax=0.0524999672940511,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, green]
+table {%
+5e-05 36.00537109375
+5e-05 36.2326736450195
+5e-05 36.6459693908691
+5e-05 36.8886947631836
+5e-05 37.4136428833008
+0.05 37.4642715454102
+6.54118977126869e-07 37.8610038757324
+1.86561738584109e-05 37.9596977233887
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={pSigma},
+x grid style={darkgray176},
+xlabel={pSigma},
+xmin=-8.19156523179263, xmax=-2.75278260800987,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, blue]
+table {%
+-3 36.00537109375
+-3.1 36.2326736450195
+-3.2 36.6459693908691
+-3.3 36.8886947631836
+-3.5 37.4136428833008
+-5.62822884633321 37.4642715454102
+-5.03462152183056 37.8610038757324
+-7.9443478398025 37.9596977233887
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Lambda Droploss},
+x grid style={darkgray176},
+xlabel={Lambda Droploss},
+xmin=-0.021275308192726, xmax=1.28909937993321,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, orange]
+table {%
+1 36.00537109375
+1 36.2326736450195
+1 36.6459693908691
+1 36.8886947631836
+1 37.4136428833008
+0.641572239382979 37.4642715454102
+1.22953689410931 37.8610038757324
+0.0382871776311803 37.9596977233887
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Lambda Weightloss},
+x grid style={darkgray176},
+xlabel={Lambda Weightloss},
+xmin=0.842409387906082, xmax=2.05512336248066,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, red]
+table {%
+2 36.00537109375
+2 36.2326736450195
+2 36.6459693908691
+2 36.8886947631836
+2 37.4136428833008
+1.46486263806301 37.4642715454102
+1.20913369301707 37.8610038757324
+0.897532750386745 37.9596977233887
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Momentum},
+x grid style={darkgray176},
+xlabel={Momentum},
+xmin=0.075, xmax=0.625,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, violet]
+table {%
+0.1 36.00537109375
+0.1 36.2326736450195
+0.1 36.6459693908691
+0.1 36.8886947631836
+0.1 37.4136428833008
+0.6 37.4642715454102
+0.418478628527373 37.8610038757324
+0.205218006297946 37.9596977233887
+};
+
+\nextgroupplot[
+legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray204},
+tick align=outside,
+tick pos=left,
+title={Threshold},
+x grid style={darkgray176},
+xlabel={Threshold},
+xmin=0.631605263622478, xmax=0.912780701732263,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.9076547622681, ymax=38.0574140548706,
+ytick style={color=black}
+]
+\addplot [semithick, black, forget plot]
+table {%
+0.9 36.00537109375
+0.9 36.2326736450195
+0.9 36.6459693908691
+0.9 36.8886947631836
+0.9 37.4136428833008
+0.712586229165526 37.4642715454102
+0.897240464622155 37.8610038757324
+0.644385965354741 37.9596977233887
+};
+\end{groupplot}
+
+\end{tikzpicture}
