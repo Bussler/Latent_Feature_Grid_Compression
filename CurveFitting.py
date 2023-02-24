@@ -141,6 +141,9 @@ def fit_curve():
     #a, b, c, d, e, f = popt
     #print('y = %.5f * x + %.5f * x^2 + %.5f * x^3 + %.5f * x^4 + %.5f * x^5 + %.5f' % (a, b, c, d, e, f))
 
+    ax = plt.gca()
+    ax.set(xscale = 'log', yscale = 'log')
+
     # M: Plotting
     plt.scatter(x, y, label='Baseline')  # M: GT
 
@@ -159,7 +162,8 @@ def fit_curve():
     plt.ylabel(y_var)
     plt.legend()
 
-    filepath = 'plots/LatexFigures/AnalyseHyperparam/CurveFitting/' + 'mhd_p_Var_Dynamic_2Deg_SetArch.png'
+    #filepath = 'plots/LatexFigures/AnalyseHyperparam/CurveFitting/' + 'mhd_p_Var_Dynamic_2Deg_SetArch.png'
+    filepath = 'plots/test'
     plt.savefig(filepath + '.png')
     tikzplotlib.save(filepath + '.pgf')
     pass
