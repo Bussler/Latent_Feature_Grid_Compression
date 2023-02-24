@@ -15,7 +15,7 @@ class DropoutLayer(torch.nn.Module):
         if DropoutLayer.theshold_list is not None:  #M used for testing, needs refactoring
             if DropoutLayer.i != 0:
                 self.threshold = DropoutLayer.theshold_list[DropoutLayer.i-1]
-            DropoutLayer.i = DropoutLayer.i + 1
+        DropoutLayer.i = DropoutLayer.i + 1
 
     def forward(self, x):
         pass
@@ -24,6 +24,9 @@ class DropoutLayer(torch.nn.Module):
         pass
 
     def multiply_values_with_dropout(self, input, device):
+        pass
+
+    def size_layer(self):
         pass
 
     @classmethod

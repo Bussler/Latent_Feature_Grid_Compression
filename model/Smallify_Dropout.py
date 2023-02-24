@@ -74,6 +74,9 @@ class SmallifyDropout(DropoutLayer):
             f_grid = input * mask
             return f_grid
 
+    def size_layer(self):
+        return self.betas.numel()
+
 
 class SmallifySignVarianceTracker():
     def __init__(self, c, sign_variance_momentum, threshold, betas):

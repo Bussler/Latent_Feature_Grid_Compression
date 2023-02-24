@@ -98,8 +98,6 @@ class VariationalDropout(DropoutLayer):
     k3 = 1.48695
     C = -k1
 
-    i = 0
-
     def __init__(self, size=(1,1,1), init_dropout=0.5, threshold=0.9):
         super(VariationalDropout, self).__init__(size, init_dropout, threshold)
         self.log_thetas = torch.nn.Parameter(torch.zeros(size), requires_grad=True)
@@ -109,6 +107,11 @@ class VariationalDropout(DropoutLayer):
         self.log_var = torch.nn.Parameter(torch.empty(size).fill_(log_alphas), requires_grad=True)
 
         self.d_mask = None
+
+        #self.scaling = 1  # M: refactor!
+        #if DropoutLayer.i == 2 or DropoutLayer.i == 3:
+        #    self.scaling = 1/2
+        #else: self.scaling = 1/3
 
     @property
     def alphas(self):
@@ -166,7 +169,7 @@ class VariationalDropout(DropoutLayer):
             if prune_mask.numel() - torch.count_nonzero(prune_mask) == 0:
                 prune_mask.data[0] = 1.0
 
-            self.d_mask = prune_mask.to(device)  #M: store pruning mask, and after pruning only mult with this!
+            self.d_mask = prune_mask.to(device) #M: store pruning mask, and after pruning only mult with this!
 
             return prune_mask.to(device)
 
@@ -175,6 +178,9 @@ class VariationalDropout(DropoutLayer):
             mask = self.calculate_pruning_mask(device) * torch.exp(self.log_thetas)
             f_grid = input * mask
             return f_grid
+
+    def size_layer(self):
+        return self.log_thetas.numel()
 
 
 class Variance_Model(nn.Module):

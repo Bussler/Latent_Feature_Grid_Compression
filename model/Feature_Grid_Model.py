@@ -124,4 +124,10 @@ class Feature_Grid_Model(nn.Module):
         zeros = 0
         for grid in f_grid:
             zeros += (grid.numel() - torch.count_nonzero(grid))
-        return zeros
+
+        binary_mask_in_floats = torch.tensor(0, dtype=torch.float32)  # M: Mock storing Mask for dropout
+        for d in self.drop:
+            binary_mask_in_floats += d.size_layer()
+        binary_mask_in_floats = binary_mask_in_floats / 32.0
+
+        return zeros - binary_mask_in_floats

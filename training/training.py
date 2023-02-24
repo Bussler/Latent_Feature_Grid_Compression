@@ -6,7 +6,7 @@ from model.Feature_Grid_Model import Feature_Grid_Model
 from model.Feature_Embedding import FourierEmbedding
 from data.IndexDataset import get_tensor, IndexDataset
 import training.learning_rate_decay as lrdecay
-from data.Interpolation import trilinear_f_interpolation
+from data.Interpolation import trilinear_f_interpolation, finite_difference_trilinear_grad
 from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
 from model.Variational_Dropout_Layer import VariationalDropoutLoss, Variance_Model, VariationalDropout
 from model.Dropout_Layer import DropoutLayer
@@ -78,11 +78,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
-    #if args['drop_type'] and args['drop_type'] == 'variational':
-    #    variance_model = Variance_Model()
-    #    variance_model.to(device)
-    #    variance_model.train()
-    #    optimizer.add_param_group({'params': variance_model.parameters()})
+    if args['drop_type'] and args['drop_type'] == 'variational':
+        variance_model = Variance_Model()
+        variance_model.to(device)
+        variance_model.train()
+        optimizer.add_param_group({'params': variance_model.parameters()})
 
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
@@ -116,10 +116,10 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Loss calculation
             if args['drop_type'] == 'variational':
-                #variational_variance = variance_model(norm_positions)
-                #variational_variance = variational_variance.squeeze(-1)
+                variational_variance = variance_model(norm_positions)
+                variational_variance = variational_variance.squeeze(-1)
 
-                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
+                #variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
@@ -189,8 +189,6 @@ def training(args, verbose=True):
                              num_workers=args['num_workers'])  # M: create dataloader from dataset to use in training
     volume = volume.to(device)
 
-    DropoutLayer.set_threshold_list(args['pruning_threshold_list'])
-
     model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
                         args['n_embedding_freq'], args['drop_type'], args['drop_momentum'], args['drop_threshold'],
                         args['wavelet_filter'], args['grid_features'], args['grid_size'], args['checkpoint_path'])
@@ -227,6 +225,7 @@ def training(args, verbose=True):
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
                         dataset, data_loader, args_first, verbose)
 
+    #zeros = torch.tensor(0, dtype=torch.float32)
     zeros = model.save_dropvalues_on_grid(device)
 
     # M: Finetuning

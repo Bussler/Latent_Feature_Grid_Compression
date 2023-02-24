@@ -73,3 +73,6 @@ class MaskedWavelet_Straight_Through_Dropout(DropoutLayer):
             mask = self.calculate_pruning_mask(device)
             f_grid = (input * (mask >= self.threshold) - input * mask).detach() + (input * mask)
             return f_grid
+
+    def size_layer(self):
+        return self.mask_values.numel()
