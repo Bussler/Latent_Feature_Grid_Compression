@@ -90,32 +90,35 @@ def third_degree_polynomial(x, a, b, c, d):
 def fifth_degree_polynomial(x, a, b, c, d, e, f):
     return (a * x) + (b * x**2) + (c * x**3) + (d * x**4) + (e * x**5) + f
 
+def simple_exponential(x, a, b):
+    return a * np.power(x, b)
+
 
 def fit_curve():
     # M: Get data
     #BASENAME = 'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'
     #experimentNames = np.linspace(0, 44, 45, dtype=int)
 
-    BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
-    experimentNames = np.linspace(0, 57, 58, dtype=int)
+    #BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
+    #experimentNames = np.linspace(0, 57, 58, dtype=int)
 
     #BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_' #'experiments/NAS/mhd_p_Smallify/mhd_p_'
     #experimentNames = np.linspace(0, 52, 53, dtype=int)
 
-    #BASENAME = 'experiments/NAS/mhd_p_MaskedStraightThrough_WithFinetuning_SetNWArchitecture/mhd_p_'
-    #experimentNames = np.linspace(0, 54, 55, dtype=int)
+    BASENAME = 'experiments/NAS/mhd_p_MaskedStraightThrough_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNames = np.linspace(0, 54, 55, dtype=int)
 
     pareto_configs = get_pareto_data(BASENAME, experimentNames)
     data_list = split_data(pareto_configs)
 
     # M: curve fitting for linear model
-    x_var = 'weight_dkl_multiplier'#'weight_dkl_multiplier'#'lambda_drop_loss'#'variational_sigma'
-    x_var2 = 'lambda_weight_loss'
-    y_var = 'compression_ratio'#'psnr'
+    x_var = 'compression_ratio'#'psnr'
+    #x_var2 = 'lambda_weight_loss'
+    y_var = 'lambda_weight_loss'#'weight_dkl_multiplier'#'lambda_drop_loss'#'variational_sigma'
 
-    x = np.asarray(data_list[x_var])
-    x2 = np.asarray(data_list[x_var2])
-    y = np.asarray(data_list[y_var])
+    x = np.log(np.asarray(data_list[x_var]))
+    #x2 = np.asarray(data_list[x_var2])
+    y = np.log(np.asarray(data_list[y_var]))
 
     #x = np.delete(x, 5, axis=0)
     #x2 = np.delete(x2, 5, axis=0)
@@ -126,14 +129,17 @@ def fit_curve():
     for entry in zip(x, y):
         print(entry[0], entry[1])
 
-    popt, _ = curve_fit(second_degree_polynomial, x, y)
+    popt, _ = curve_fit(simple_exponential, x, y)
+    #popt, _ = curve_fit(second_degree_polynomial, x, y)
     #popt, _ = curve_fit(second_degree_polynomial_MultiDim, X, y)
     #popt, _ = curve_fit(Gauss, x, y)
     #popt, _ = curve_fit(fifth_degree_polynomial, x, y)
 
     # M: Summarize Result
-    a, b, c = popt
-    print('y = %.5f * x + %.5f * x^2 + %.5f' % (a, b, c))
+    a, b = popt
+    print('y = %.5f * x ^ %.5f' % (a, b))
+    #a, b, c = popt
+    #print('y = %.5f * x + %.5f * x^2 + %.5f' % (a, b, c))
     #a1, a2, b1, b2, c = popt
     #print(popt)
     #A, B, C = popt
@@ -141,8 +147,8 @@ def fit_curve():
     #a, b, c, d, e, f = popt
     #print('y = %.5f * x + %.5f * x^2 + %.5f * x^3 + %.5f * x^4 + %.5f * x^5 + %.5f' % (a, b, c, d, e, f))
 
-    ax = plt.gca()
-    ax.set(xscale = 'log', yscale = 'log')
+    #ax = plt.gca()
+    #ax.set(xscale = 'log', yscale = 'log')
 
     # M: Plotting
     plt.scatter(x, y, label='Baseline')  # M: GT
@@ -151,20 +157,22 @@ def fit_curve():
     #x_Line2 = np.linspace(min(x2), max(x2), 20, dtype=float)
     #X_line = (x_line, x_Line2)
 
-    y_line = second_degree_polynomial(x_line, a, b, c)
+    y_line = simple_exponential(x_line, a, b)
+    #y_line = second_degree_polynomial(x_line, a, b, c)
     #y_line = second_degree_polynomial_MultiDim(X_line, a1, a2, b1, b2, c)
     #y_line = Gauss(x_line, A, B, C)
     #y_line = fifth_degree_polynomial(x_line, a, b, c, d, e, f)
 
     plt.plot(x_line, y_line, '--', label='Fitted', color='crimson')
 
-    plt.xlabel(x_var)
-    plt.ylabel(y_var)
+    plt.xlabel('log '+x_var)
+    plt.ylabel('log '+y_var)
     plt.legend()
 
-    #filepath = 'plots/LatexFigures/AnalyseHyperparam/CurveFitting/' + 'mhd_p_Var_Dynamic_2Deg_SetArch.png'
-    filepath = 'plots/test'
+    filepath = 'plots/LatexFigures/AnalyseHyperparam/CurveFitting2/' + 'mhd_p_BinaryDrop_Weights_Exponential_SetArch.png'
+    #filepath = 'plots/test'
     plt.savefig(filepath + '.png')
+    plt.savefig(filepath + '.pdf')
     tikzplotlib.save(filepath + '.pgf')
     pass
 
