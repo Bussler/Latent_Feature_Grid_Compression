@@ -125,7 +125,7 @@ def plot_pareto_frontier(Xs, Ys, maxX=True, maxY=True):
 
     return pareto_front
 
-def findParetoValues(Xs, Ys, BASENAME, experimentNames, maxX=True, maxY=True):
+def findParetoValues(Xs, Ys, BASENAME, experimentNames, maxX=True, maxY=True, limitCompressionRatio=None):
     sorted_list = sorted([[Xs[i], Ys[i]] for i in range(len(Xs))], reverse=maxY)
     pareto_front = [sorted_list[0]]
     for pair in sorted_list[1:]:
@@ -149,9 +149,10 @@ def findParetoValues(Xs, Ys, BASENAME, experimentNames, maxX=True, maxY=True):
             cName = foldername + '/'+infoName
 
             info = dict_from_file(cName)
-            if info['compression_ratio'] == c:
+            if info['compression_ratio'] == c \
+                    and (limitCompressionRatio is None or info['compression_ratio'] < limitCompressionRatio):
                 config = dict_from_file(foldername+'/'+configName)
-                print(eN,': ', c)
+                print(eN,': ', c, ' PSNR: ', info['psnr'])
 
                 #pc = [c, config['lr'], config['grad_lambda'], config['n_layers']]
                 paretoConfigs.append(config)

@@ -1,0 +1,104 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{orange}{RGB}{255,165,0}
+\definecolor{violet}{RGB}{238,130,238}
+
+\begin{groupplot}[group style={group size=2 by 2}]
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={DKL Ramp Up},
+x grid style={darkgray176},
+xmin=-0.00249931317507402, xmax=0.0524999672940511,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, orange]
+table {%
+5e-05 659.220570110921
+5e-05 592.509380025013
+5e-05 541.715671861217
+5e-05 497.744874373368
+5e-05 425.239786628369
+0.05 293.740810288933
+6.54118977126869e-07 235.849157243439
+1.86561738584109e-05 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={PSigma},
+x grid style={darkgray176},
+xmin=-8.19156523179263, xmax=-2.75278260800987,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, red]
+table {%
+-3 659.220570110921
+-3.1 592.509380025013
+-3.2 541.715671861217
+-3.3 497.744874373368
+-3.5 425.239786628369
+-5.62822884633321 293.740810288933
+-5.03462152183056 235.849157243439
+-7.9443478398025 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Momentum},
+x grid style={darkgray176},
+xmin=0.075, xmax=0.625,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Compression Rate},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, violet]
+table {%
+0.1 659.220570110921
+0.1 592.509380025013
+0.1 541.715671861217
+0.1 497.744874373368
+0.1 425.239786628369
+0.6 293.740810288933
+0.418478628527373 235.849157243439
+0.205218006297946 146.270542779263
+};
+
+\nextgroupplot[
+tick align=outside,
+tick pos=left,
+title={Pruning Threshold},
+x grid style={darkgray176},
+xmin=0.631605263622478, xmax=0.912780701732263,
+xtick style={color=black},
+y grid style={darkgray176},
+ymin=120.62304141268, ymax=684.868071477504,
+ytick style={color=black}
+]
+\addplot [semithick, black]
+table {%
+0.9 659.220570110921
+0.9 592.509380025013
+0.9 541.715671861217
+0.9 497.744874373368
+0.9 425.239786628369
+0.712586229165526 293.740810288933
+0.897240464622155 235.849157243439
+0.644385965354741 146.270542779263
+};
+\end{groupplot}
+
+\end{tikzpicture}
