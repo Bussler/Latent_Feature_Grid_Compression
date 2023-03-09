@@ -1,0 +1,46 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+legend cell align={left},
+legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray204},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={Compression Ratio},
+xmin=112.403938469652, xmax=615.371543908602,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={PSNR},
+ymin=35.715875415802, ymax=40.9046419334412,
+ytick style={color=black}
+]
+\addplot [semithick, steelblue31119180]
+table {%
+592.509380025013 36.2326736450195
+541.715671861217 36.6459693908691
+497.744874373368 36.8886947631836
+425.239786628369 37.4136428833008
+293.740810288933 37.4642715454102
+245.715671861217 38.1459693908691
+170.715671861217 40.6459693908691
+};
+\addlegendentry{With Wavelet}
+\addplot [semithick, darkorange25512714]
+table {%
+465.002345300379 35.9517284393311
+402.525800560387 36.5298118591309
+358.636650280533 36.6467903137207
+311.132187742431 37.1987113952637
+210.208665002385 38.196817779541
+135.266102353241 40.6687889099121
+};
+\addlegendentry{Without Wavelet}
+\end{axis}
+
+\end{tikzpicture}
