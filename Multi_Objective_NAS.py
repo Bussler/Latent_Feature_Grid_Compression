@@ -26,6 +26,8 @@ def create_experiment_scheduler(config, scriptname="Feature_Grid_Training.py", e
         log_path: str,
         lambda_drop_loss: float,
         lambda_weight_loss: float,
+            drop_threshold: float,
+            drop_momentum: float,
         n_hidden_size: float,
         grid_size: float,
         grid_features: float,
@@ -52,6 +54,11 @@ def create_experiment_scheduler(config, scriptname="Feature_Grid_Training.py", e
             str(lambda_drop_loss),
             "--lambda_weight_loss",
             str(lambda_weight_loss),
+
+            "--drop_threshold",
+            str(drop_threshold),
+            "--drop_momentum",
+            str(drop_momentum),
 
             # M: TODO search for best rmse for compression rate: Diff NW Size + Num Layers + Pruning
 
@@ -92,15 +99,28 @@ def create_experiment_scheduler(config, scriptname="Feature_Grid_Training.py", e
         # in turn makes the Pareto frontier look pretty weird.
         RangeParameter(
             name="lambda_drop_loss",
-            lower=1.e-10,
-            upper=1.e-6,
+            lower=1.e-10, #1.e-10, 1.e-11
+            upper=1.e-2, #1.e-2, 1.e-4
             parameter_type=ParameterType.FLOAT,
             log_scale=True,
         ),
         RangeParameter(
             name="lambda_weight_loss",
-            lower=1.e-10,
-            upper=1.e-6,
+            lower=1.e-10, #1.e-10,
+            upper=1.e-2, #1.e-2,
+            parameter_type=ParameterType.FLOAT,
+            log_scale=True,
+        ),
+        RangeParameter(
+            name="drop_threshold",
+            lower=0.6,
+            upper=0.95,
+            parameter_type=ParameterType.FLOAT,
+        ),
+        RangeParameter(
+            name="drop_momentum",
+            lower=1e-04,
+            upper=1e-01,
             parameter_type=ParameterType.FLOAT,
             log_scale=True,
         ),
@@ -112,14 +132,14 @@ def create_experiment_scheduler(config, scriptname="Feature_Grid_Training.py", e
         ),
         RangeParameter(
             name="grid_size",
-            lower=8,
-            upper=48,
+            lower=4,
+            upper=32,
             parameter_type=ParameterType.INT,
         ),
         RangeParameter(
             name="grid_features",
             lower=4,
-            upper=32,
+            upper=24,
             parameter_type=ParameterType.INT,
         ),
     ]
@@ -216,7 +236,7 @@ def create_experiment_scheduler_baseline(config, scriptname="Feature_Grid_Traini
         n_hidden_size: float,
         grid_size: float,
         grid_features: float,
-        n_embedding_freq: float,
+        #n_embedding_freq: float,
         trial_idx: int = -1,
     ) -> specs.AppDef:
 
@@ -245,8 +265,8 @@ def create_experiment_scheduler_baseline(config, scriptname="Feature_Grid_Traini
             str(grid_size),
             "--grid_features",
             str(grid_features),
-            "--n_embedding_freq",
-            str(n_embedding_freq),
+            #"--n_embedding_freq",
+            #str(n_embedding_freq),
 
             # other config options
             name="trainer",
@@ -285,14 +305,14 @@ def create_experiment_scheduler_baseline(config, scriptname="Feature_Grid_Traini
         ),
         RangeParameter(
             name="n_hidden_size",
-            lower=4,
+            lower=16,
             upper=32,
             parameter_type=ParameterType.INT,
         ),
         RangeParameter(
             name="grid_size",
             lower=8,
-            upper=48,
+            upper=62,
             parameter_type=ParameterType.INT,
         ),
         RangeParameter(
@@ -301,12 +321,12 @@ def create_experiment_scheduler_baseline(config, scriptname="Feature_Grid_Traini
             upper=32,
             parameter_type=ParameterType.INT,
         ),
-        RangeParameter(
-            name="n_embedding_freq",
-            lower=2,
-            upper=6,
-            parameter_type=ParameterType.INT,
-        ),
+        #RangeParameter(
+        #    name="n_embedding_freq",
+        #    lower=2,
+        #    upper=6,
+        #    parameter_type=ParameterType.INT,
+        #),
     ]
 
     search_space = SearchSpace(
@@ -398,7 +418,7 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
         lambda_drop_loss: float,
         lambda_weight_loss: float,
             weight_dkl_multiplier: float,
-            variational_sigma: float,
+            #variational_sigma: float,
             drop_threshold: float,
             drop_momentum: float,
         n_hidden_size: float,
@@ -430,8 +450,8 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
 
             "--weight_dkl_multiplier",
             str(weight_dkl_multiplier),
-            "--variational_sigma",
-            str(variational_sigma),
+            #"--variational_sigma",
+            #str(variational_sigma),
             "--drop_threshold",
             str(drop_threshold),
             "--drop_momentum",
@@ -476,8 +496,8 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
         # in turn makes the Pareto frontier look pretty weird.
         RangeParameter(
             name="lambda_drop_loss",
-            lower=0.5,
-            upper=2.0,
+            lower=1e-05,#1e-5, 1e-03
+            upper=1e-01,  #1e-1, 2.0
             parameter_type=ParameterType.FLOAT,
             log_scale=True,
         ),
@@ -486,21 +506,20 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
             lower=0.5,
             upper=2.0,
             parameter_type=ParameterType.FLOAT,
-            log_scale=True,
         ),
         RangeParameter(
             name="weight_dkl_multiplier",
-            lower=5e-07,
-            upper=5e-02,
+            lower=5e-07, #5e-07, 5e-06
+            upper=3e-03, #3e-03,
             parameter_type=ParameterType.FLOAT,
             log_scale=True,
         ),
-        RangeParameter(
-            name="variational_sigma",
-            lower=-9.0,
-            upper=-5.0,
-            parameter_type=ParameterType.FLOAT,
-        ),
+        #RangeParameter(
+        #    name="variational_sigma",
+        #    lower=-5.0, #-9.0, -5.0
+        #    upper=-2.0,
+        #    parameter_type=ParameterType.FLOAT,
+        #),
         RangeParameter(
             name="drop_threshold",
             lower=0.6,
@@ -521,14 +540,14 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
         ),
         RangeParameter(
             name="grid_size",
-            lower=8,
-            upper=48,
+            lower=4,
+            upper=32,
             parameter_type=ParameterType.INT,
         ),
         RangeParameter(
             name="grid_features",
             lower=4,
-            upper=32,
+            upper=24,
             parameter_type=ParameterType.INT,
         ),
     ]
@@ -601,14 +620,14 @@ def create_variational_experiment_scheduler(config, scriptname="Feature_Grid_Tra
         search_space=experiment.search_space,
         optimization_config=experiment.optimization_config,
         num_trials=total_trials,
-        max_parallelism_cap=3,
+        max_parallelism_cap=4,
       )
 
     scheduler = Scheduler(
         experiment=experiment,
         generation_strategy=gs,
         options=SchedulerOptions(
-            total_trials=total_trials, max_pending_trials=3
+            total_trials=total_trials, max_pending_trials=4
         ),
     )
 

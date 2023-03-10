@@ -199,14 +199,17 @@ def fit_curve():
 
 def fit_model_complexity_curve():
     BASENAME = 'experiments/NAS/mhd_p_Variational_Static_WithFinetuning_Buggy/mhd_p_'
+    #BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SearchNWArchitecture/mhd_p_'
+    #BASENAME = 'experiments/NAS/mhd_p_Smallify/mhd_p_'
+    #BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
     experimentNames = np.linspace(0, 79, 80, dtype=int)
 
     pareto_configs, pareto_infos = get_pareto_data(BASENAME, experimentNames)
     data_list = split_data(pareto_configs, pareto_infos)
 
     # M: Handling the data
-    x_var = 'compression_ratio'
-    y_var = 'pareto_FeatureSize'#'pareto_GridSize'#'pre_prune_compr' # pareto_FeatureSize
+    x_var = 'pareto_GridSize'#'pareto_GridSize'#'pre_prune_compr' # pareto_FeatureSize
+    y_var = 'compression_ratio'
     x = np.log(np.asarray(data_list[x_var]))
     y = np.log(np.asarray(data_list[y_var]))
 
@@ -227,7 +230,7 @@ def fit_model_complexity_curve():
     plt.ylabel('log '+y_var)
     plt.legend()
 
-    filepath = 'plots/LatexFigures/AnalyseHyperparam/ComprToPreCompr/' + 'mhd_p_Variational_Static_FeatureSize_SearchArch'
+    filepath = 'plots/LatexFigures/AnalyseHyperparam/ComprToPreCompr/' + 'mhd_p_Variational_Static_GridSize_SearchArch'
     #filepath = 'plots/test'
     plt.savefig(filepath + '.png')
     plt.savefig(filepath + '.pdf')

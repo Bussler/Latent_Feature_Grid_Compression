@@ -22,7 +22,6 @@ class Feature_Grid_Model(nn.Module):
         self.filter = wavelet_filter
 
         features, shapes = self.encode_volume(feature_grid)
-        #self.feature_grid = torch.nn.Parameter(feature_grid, requires_grad=True)
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in features])
         self.shape_array = shapes
 
@@ -31,6 +30,9 @@ class Feature_Grid_Model(nn.Module):
         else:
             self.drop = nn.ModuleList([drop_layer.create_instance(
                 f.shape[1:], drop_layer.p, drop_layer.threshold) for f in features])
+
+        #self.feature_grid = nn.ParameterList(values=[nn.Parameter(feature_grid, requires_grad=True)])
+        #self.drop = nn.ModuleList([drop_layer.create_instance(feature_grid.shape[1:], drop_layer.p, drop_layer.threshold)])
 
         self.input_channel = input_channel_data + embedder.out_dim + feature_grid.shape[0]
         self.hidden_width = hidden_channel
@@ -47,14 +49,8 @@ class Feature_Grid_Model(nn.Module):
     def forward(self, input):
 
         # M: decode feature grid
-        # feature_grid_samples = self.drop(self.feature_grid)
+        #feature_grid_samples = self.drop[0](self.feature_grid[0])
         feature_grid_samples = self.decode_volume()
-
-        # M: reparameterization trick in case of variational dropout
-        #if isinstance(self.drop[0], VariationalDropout):
-        #    variational_random_noise = decode_variational_parameter(self.drop, self.filter, self.shape_array)
-        #    feature_grid_samples = feature_grid_samples * variational_random_noise
-
 
         # M: interpolate feature entry
         if not self.training:  # M: TODO refactor this

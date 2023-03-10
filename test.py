@@ -9,7 +9,7 @@ from visualization.pltUtils import dict_from_file
 import visualization.pltUtils as pu
 
 def test_pywavelets():
-    size_tensor = (64,64,64,32)
+    size_tensor = (32,64,64,64)
 
     feature_grid = torch.empty(size_tensor).uniform_(0, 1)
 
@@ -21,7 +21,7 @@ def test_pywavelets():
     LL, (LH, HL, HH) = coeffs2
 
     # M: Method 2):
-    coeffs = pywt.wavedec2(original, wavelet='db1', level=1)
+    coeffs = pywt.wavedec2(original, wavelet='db1', level=2)
     coeff_arr, coeff_slices = pywt.coeffs_to_array(coeffs)
 
     # M: reconstruct
@@ -99,8 +99,10 @@ def analyse_coefficients():
     plt.savefig(filepath)
 
 def analyse_paretor_frontier():
-    BASENAME = 'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'
-    experimentNames = np.linspace(0, 44, 45, dtype=int)
+    #BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_' #'experiments/NAS/mhd_p_Smallify/mhd_p_'
+    BASENAME = 'experiments/WithoutWaveletDecomp/Var_Static_2/mhd_p_'
+    #experimentNames = np.linspace(0, 52, 53, dtype=int)
+    experimentNames = [1,6,19,40,41,42,43,44]#[4,6,10,12,27,29,35,40,43,48,49,50,51,52]
 
     new_base_dir = '/experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/'
 
@@ -154,10 +156,164 @@ def create_parallel_coordinates():
     pu.generate_Parallel_Coordinate_Plot(df, filename, None, None)
 
 
+def HyperparamNWWeights():
+    BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_' #'experiments/NAS/mhd_p_Smallify/mhd_p_'
+    experimentNames = np.linspace(0, 52, 53, dtype=int)
+    # experimentNamesOther = [14,16,31,34,36,37,39,42,50,53,55,56,58,59,63,64,66,67,70,75,76]
+
+    #BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SearchNWArchitecture/mhd_p_'  # 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
+    #experimentNames = np.linspace(0, 79, 80, dtype=int)  # np.linspace(0, 54, 55, dtype=int)
+
+    #BASENAME = 'experiments/NAS/mhd_p_Variational_Static_WithFinetuning_Buggy/mhd_p_'  # 'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'
+    #experimentNames = np.linspace(0, 79, 80, dtype=int)  # np.linspace(0, 44, 45, dtype=int)
+
+    InfoName = 'info.txt'
+    configName = 'config.txt'
+
+    PSNR = []
+    CompressionRatio = []
+
+    pu.generate_plot_lists(([PSNR, CompressionRatio],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME, (InfoName,), experiment_names=experimentNames)
+
+    pareto_front = pu.plot_pareto_frontier(CompressionRatio, PSNR)
+
+    pf_X = [pair[0] for pair in pareto_front]
+    pf_Y = [pair[1] for pair in pareto_front]
+
+    paretoCompr = []
+    paretoPsnr = []
+    paretoLBeta = []
+    paretoLWeight = []
+    paretoMomentum = []
+    paretoThreshold = []
+
+    paretoDKLMult = []
+    paretoSigma = []
+
+    for ppair in pareto_front:
+        c = ppair[0]
+        p = ppair[1]
+        for eN in experimentNames:
+            foldername = BASENAME + str(eN)
+            cName = foldername + '/'+InfoName
+
+            info = dict_from_file(cName)
+            if info['compression_ratio'] == c and c < 1000:
+                config = dict_from_file(foldername+'/'+configName)
+                #print(config['expname'])
+
+                #pc = [c, config['lambda_betas'], config['lambda_weights'], config['lr'], config['grad_lambda'], config['n_layers'], config['lr_decay']]
+                paretoCompr.append(c)
+                paretoPsnr.append(p)
+                paretoLBeta.append(config['lambda_drop_loss'])
+                paretoLWeight.append(config['lambda_weight_loss'])
+                paretoMomentum.append(config['drop_momentum'])
+                paretoThreshold.append(config['drop_threshold'])
+
+                #paretoDKLMult.append(config['weight_dkl_multiplier'])
+                #paretoSigma.append(config['variational_sigma'])
+
+    plt.plot(paretoLBeta, paretoCompr)
+
+    filepath = 'plots/' + 'test'
+    plt.savefig(filepath + '.png')
+    #tikzplotlib.save(filepath + '.pgf')
+    pass
+
+
+def fvRunsDiffComprRates():
+    configName = 'experiment-config-files/test.txt'
+    config = dict_from_file(configName)
+
+    BASEEXPNAME = '/experiments/QualityControl/LinearControl/Smallify/'
+
+    def simple_exponential_dklMult(x):
+        return -119.50757 * np.power(x, -1.46182)
+
+    def simple_exponential_psigma(x):
+        return -228.74157 * np.power(x, -0.67691)
+
+    def simple_exponential_betas(x):
+        return 2.2983364122806407 * x + np.log(1.1925636433232786e-14)
+
+    def simple_exponential_weights(x):
+        return 4.225962455634267 * x + np.log(4.613724748521028e-17)
+
+    for compr in [100, 200, 300, 400, 500, 600]:
+
+        #dkl_mult = np.exp(simple_exponential_dklMult(np.log(compr)))
+        betas = np.exp(simple_exponential_betas(np.log(compr)))
+        weights = np.exp(simple_exponential_weights(np.log(compr)))
+
+        #psigma = simple_exponential_psigma(compr)
+
+        print('Compr: ', compr, ' betas: ', betas, ' weights: ', weights)#, ' thresh: ', np.exp(thresh))
+
+
+def RatioPruned_With_WithoutWavelets():
+    from CurveFitting import get_pareto_data
+    import tikzplotlib
+
+    BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'#'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_' #'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNames = np.linspace(0, 57, 58, dtype=int)
+
+    BASENAMEOther = 'experiments/WithoutWaveletDecomp/Var_Dynamic_2/mhd_p_'
+    experimentNamesOther = [2,19,28,30,32,48,49,51,52,53,56,57]#[1, 6, 19, 40, 41, 42, 43, 44]  # [4,6,10,12,27,29,35,40,43,48,49,50,51,52]
+
+    #BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_'
+    #experimentNames = np.linspace(0, 52, 53, dtype=int)
+
+    #BASENAMEOther = 'experiments/WithoutWaveletDecomp/Smallify_2/mhd_p_'
+    #experimentNamesOther = [4,6,10,12,27,29,35,40,43,48,49,50,51,52]
+
+    InfoName = 'info.txt'
+    configName = 'config.txt'
+
+    configs_WithWavelet, info_WithWavelet = get_pareto_data(BASENAME, experimentNames)
+
+    configs_WithoutWavelet, info_WithoutWavelet = get_pareto_data(BASENAMEOther, experimentNamesOther)
+
+    compr_with_Wavelet = []
+    compr_without_Wavelet = []
+
+    upper_limit = 600
+
+    percentage_pruned_WithWavelet = []
+    for entry in info_WithWavelet:
+        if entry['compression_ratio'] < upper_limit:
+            percentage_pruned_WithWavelet.append((entry['num_zeros'] / entry['num_parameters']) * 100.0)
+            compr_with_Wavelet.append(entry['compression_ratio'])
+
+    percentage_pruned_WithoutWavelet = []
+    for entry in info_WithoutWavelet:
+        if entry['compression_ratio'] < upper_limit:
+            percentage_pruned_WithoutWavelet.append((entry['num_zeros'] / entry['num_parameters']) * 100.0)
+            compr_without_Wavelet.append(entry['compression_ratio'])
+
+    plt.plot(compr_with_Wavelet, percentage_pruned_WithWavelet, label='With Wavelet')
+    plt.plot(compr_without_Wavelet, percentage_pruned_WithoutWavelet, label='Without Wavelet')
+
+    plt.xlabel('Compression Ratio')
+    plt.ylabel('Pruned in %')
+    plt.legend()
+
+    filepath = 'plots/LatexFigures/WaveletNoWavelet/Variational_Dynamic_PercentilePruned'
+    plt.savefig(filepath + '.png')
+    plt.savefig(filepath + '.pdf')
+    tikzplotlib.save(filepath + '.pgf')
+
+    pass
+
+
 if __name__ == '__main__':
-    #test_pywavelets()
+    test_pywavelets()
     #analyse_Wavelet()
     #test_TensorWavelets()
     #analyse_coefficients()
-    analyse_paretor_frontier()
+    #analyse_paretor_frontier()
+    #HyperparamNWWeights()
+    #fvRunsDiffComprRates()
 
+    #RatioPruned_With_WithoutWavelets()

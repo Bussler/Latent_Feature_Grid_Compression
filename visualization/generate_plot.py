@@ -166,18 +166,342 @@ def generateParetoFrontier():
     tikzplotlib.save(filepath + '.pgf')
 
 
+def generateParetoFrontier_With_Variance():
+
+    BASENAME_Smallify = 'experiments/NAS_testVol/Smallify_SearchNWArch/testvol_'
+    experimentNames_Smallify = np.linspace(0, 69, 70, dtype=int)
+
+    BASENAME_Smallify_2 = 'experiments/NAS_testVol/Smallify_SearchNWArch_2/testvol_'
+
+    BASENAME_Smallify_3 = 'experiments/NAS_testVol/Smallify_SearchNWArch_3/testvol_'
+
+
+    BASENAME_Var_Dynamic = 'experiments/NAS_testVol/Variational_Dynamic_SearchNWArch/testvol_'
+    experimentNames_Var_Dynamic = np.linspace(0, 69, 70, dtype=int)
+
+    BASENAME_Var_Dynamic_2 = 'experiments/NAS_testVol/Variational_Dynamic_SearchNWArch_2/testvol_'
+
+    BASENAME_Var_Dynamic_3 = 'experiments/NAS_testVol/Variational_Dynamic_SearchNWArch_3/testvol_'
+
+
+    BASENAME_Var_Static = 'experiments/NAS_testVol/Variational_Static_SearchNWArch/testvol_'
+    experimentNames_Var_Static = np.linspace(0, 69, 70, dtype=int)
+
+    BASENAME_Var_Static_2 = 'experiments/NAS_testVol/Variational_Static_SearchNWArch_2/testvol_'
+
+    BASENAME_Var_Static_3 = 'experiments/NAS_testVol/Variational_Static_SearchNWArch_3/testvol_'
+
+
+    BASENAMEUnpruned = 'experiments/NAS_testVol/baseline/testvol_'
+    experimentNamesUnpruned = np.linspace(0, 49, 50, dtype=int)
+
+    BASENAMEUnpruned_2 = 'experiments/NAS_testVol/baseline_2/testvol_'
+    experimentNamesUnpruned_2 = np.linspace(0, 49, 50, dtype=int)
+
+    BASENAMEUnpruned_3 = 'experiments/NAS_testVol/baseline_3/testvol_'
+    experimentNamesUnpruned_3 = np.linspace(0, 49, 50, dtype=int)
+
+
+    InfoName = 'info.txt'
+    configName = 'config.txt'
+
+
+    PSNRSmallify = []
+    CompressionRatioSmallify = []
+    PSNRSmallify_2 = []
+    CompressionRatioSmallify_2 = []
+    PSNRSmallify_3 = []
+    CompressionRatioSmallify_3 = []
+
+
+    PSNRVar_Dynamic = []
+    CompressionRatioVar_Dynamic = []
+    PSNRVar_Dynamic_2 = []
+    CompressionRatioVar_Dynamic_2 = []
+    PSNRVar_Dynamic_3 = []
+    CompressionRatioVar_Dynamic_3 = []
+
+
+    PSNRVar_Static = []
+    CompressionRatioVar_Static = []
+    PSNRVar_Static_2 = []
+    CompressionRatioVar_Static_2 = []
+    PSNRVar_Static_3 = []
+    CompressionRatioVar_Static_3 = []
+
+
+    PSNRUnpruned = []
+    CompressionRatioUnpruned = []
+
+    PSNRUnpruned_2 = []
+    CompressionRatioUnpruned_2 = []
+
+    PSNRUnpruned_3 = []
+    CompressionRatioUnprune_3 = []
+
+
+    generate_plot_lists(([PSNRSmallify, CompressionRatioSmallify],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Smallify, (InfoName,), experiment_names=experimentNames_Smallify)
+    generate_plot_lists(([PSNRSmallify_2, CompressionRatioSmallify_2],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Smallify_2, (InfoName,), experiment_names=experimentNames_Smallify)
+    generate_plot_lists(([PSNRSmallify_3, CompressionRatioSmallify_3],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Smallify_3, (InfoName,), experiment_names=experimentNames_Smallify)
+
+    generate_plot_lists(([PSNRVar_Dynamic, CompressionRatioVar_Dynamic],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Dynamic, (InfoName,), experiment_names=experimentNames_Var_Dynamic)
+    generate_plot_lists(([PSNRVar_Dynamic_2, CompressionRatioVar_Dynamic_2],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Dynamic_2, (InfoName,), experiment_names=experimentNames_Var_Dynamic)
+    generate_plot_lists(([PSNRVar_Dynamic_3, CompressionRatioVar_Dynamic_3],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Dynamic_3, (InfoName,), experiment_names=experimentNames_Var_Dynamic)
+
+    generate_plot_lists(([PSNRVar_Static, CompressionRatioVar_Static],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Static, (InfoName,), experiment_names=experimentNames_Var_Static)
+    generate_plot_lists(([PSNRVar_Static_2, CompressionRatioVar_Static_2],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Static_2, (InfoName,), experiment_names=experimentNames_Var_Static)
+    generate_plot_lists(([PSNRVar_Static_3, CompressionRatioVar_Static_3],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAME_Var_Static_3, (InfoName,), experiment_names=experimentNames_Var_Static)
+
+
+    generate_plot_lists(([PSNRUnpruned, CompressionRatioUnpruned],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAMEUnpruned, (InfoName,), experiment_names=experimentNamesUnpruned)
+    generate_plot_lists(([PSNRUnpruned_2, CompressionRatioUnpruned_2],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAMEUnpruned_2, (InfoName,), experiment_names=experimentNamesUnpruned_2)
+    generate_plot_lists(([PSNRUnpruned_3, CompressionRatioUnprune_3],),
+                        (['psnr', 'compression_ratio'],),
+                        BASENAMEUnpruned_3, (InfoName,), experiment_names=experimentNamesUnpruned_3)
+
+    pareto_frontSmallify = plot_pareto_frontier(CompressionRatioSmallify, PSNRSmallify)
+    pareto_frontSmallify_2 = plot_pareto_frontier(CompressionRatioSmallify_2, PSNRSmallify_2)
+    pareto_frontSmallify_3 = plot_pareto_frontier(CompressionRatioSmallify_3, PSNRSmallify_3)
+
+    pareto_frontVar_Dynamic = plot_pareto_frontier(CompressionRatioVar_Dynamic, PSNRVar_Dynamic)
+    pareto_frontVar_Dynamic_2 = plot_pareto_frontier(CompressionRatioVar_Dynamic_2, PSNRVar_Dynamic_2)
+    pareto_frontVar_Dynamic_3 = plot_pareto_frontier(CompressionRatioVar_Dynamic_3, PSNRVar_Dynamic_3)
+
+    pareto_frontVar_Static = plot_pareto_frontier(CompressionRatioVar_Static, PSNRVar_Static)
+    pareto_frontVar_Static_2 = plot_pareto_frontier(CompressionRatioVar_Static_2, PSNRVar_Static_2)
+    pareto_frontVar_Static_3 = plot_pareto_frontier(CompressionRatioVar_Static_3, PSNRVar_Static_3)
+
+    pareto_frontUnpruned = plot_pareto_frontier(CompressionRatioUnpruned, PSNRUnpruned)
+    pareto_frontUnpruned2 = plot_pareto_frontier(CompressionRatioUnpruned_2, PSNRUnpruned_2)
+    pareto_frontUnpruned3 = plot_pareto_frontier(CompressionRatioUnprune_3, PSNRUnpruned_3)
+
+    '''Plotting process'''
+
+    pf_XSmallify = [pair[0] for pair in pareto_frontSmallify]
+    pf_YSmallify = [pair[1] for pair in pareto_frontSmallify]
+    pf_XSmallify_2 = [pair[0] for pair in pareto_frontSmallify_2]
+    pf_YSmallify_2 = [pair[1] for pair in pareto_frontSmallify_2]
+    pf_XSmallify_3 = [pair[0] for pair in pareto_frontSmallify_3]
+    pf_YSmallify_3 = [pair[1] for pair in pareto_frontSmallify_3]
+
+    pf_XVar_Dynamic = [pair[0] for pair in pareto_frontVar_Dynamic]
+    pf_YVar_Dynamic = [pair[1] for pair in pareto_frontVar_Dynamic]
+    pf_XVar_Dynamic_2 = [pair[0] for pair in pareto_frontVar_Dynamic_2]
+    pf_YVar_Dynamic_2 = [pair[1] for pair in pareto_frontVar_Dynamic_2]
+    pf_XVar_Dynamic_3 = [pair[0] for pair in pareto_frontVar_Dynamic_3]
+    pf_YVar_Dynamic_3 = [pair[1] for pair in pareto_frontVar_Dynamic_3]
+
+    pf_XVar_Static = [pair[0] for pair in pareto_frontVar_Static]
+    pf_YVar_Static = [pair[1] for pair in pareto_frontVar_Static]
+    pf_XVar_Static_2 = [pair[0] for pair in pareto_frontVar_Static_2]
+    pf_YVar_Static_2 = [pair[1] for pair in pareto_frontVar_Static_2]
+    pf_XVar_Static_3 = [pair[0] for pair in pareto_frontVar_Static_3]
+    pf_YVar_Static_3 = [pair[1] for pair in pareto_frontVar_Static_3]
+
+    pf_XUnpruned = [pair[0] for pair in pareto_frontUnpruned]
+    pf_YUnpruned = [pair[1] for pair in pareto_frontUnpruned]
+    pf_XUnpruned2 = [pair[0] for pair in pareto_frontUnpruned2]
+    pf_YUnpruned2 = [pair[1] for pair in pareto_frontUnpruned2]
+    pf_XUnpruned3 = [pair[0] for pair in pareto_frontUnpruned3]
+    pf_YUnpruned3 = [pair[1] for pair in pareto_frontUnpruned3]
+
+    upper_limit = 400
+    lower_limit = 0
+
+    new_pf_XSmallify = []
+    new_pf_YSmallify = []
+    for i, k in zip(pf_XSmallify, pf_YSmallify):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XSmallify.append(i)
+            new_pf_YSmallify.append(k)
+    new_pf_XSmallify_2 = []
+    new_pf_YSmallify_2 = []
+    for i, k in zip(pf_XSmallify_2, pf_YSmallify_2):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XSmallify_2.append(i)
+            new_pf_YSmallify_2.append(k)
+    new_pf_XSmallify_3 = []
+    new_pf_YSmallify_3 = []
+    for i, k in zip(pf_XSmallify_3, pf_YSmallify_3):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XSmallify_3.append(i)
+            new_pf_YSmallify_3.append(k)
+
+
+    new_pf_XVar_Dynamic = []
+    new_pf_YVar_Dynamic = []
+    for i, k in zip(pf_XVar_Dynamic, pf_YVar_Dynamic):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Dynamic.append(i)
+            new_pf_YVar_Dynamic.append(k)
+    new_pf_XVar_Dynamic_2 = []
+    new_pf_YVar_Dynamic_2 = []
+    for i, k in zip(pf_XVar_Dynamic_2, pf_YVar_Dynamic_2):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Dynamic_2.append(i)
+            new_pf_YVar_Dynamic_2.append(k)
+    new_pf_XVar_Dynamic_3 = []
+    new_pf_YVar_Dynamic_3 = []
+    for i, k in zip(pf_XVar_Dynamic_3, pf_YVar_Dynamic_3):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Dynamic_3.append(i)
+            new_pf_YVar_Dynamic_3.append(k)
+
+    new_pf_XVar_Static = []
+    new_pf_YVar_Static = []
+    for i, k in zip(pf_XVar_Static, pf_YVar_Static):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Static.append(i)
+            new_pf_YVar_Static.append(k)
+    new_pf_XVar_Static_2 = []
+    new_pf_YVar_Static_2 = []
+    for i, k in zip(pf_XVar_Static_2, pf_YVar_Static_2):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Static_2.append(i)
+            new_pf_YVar_Static_2.append(k)
+    new_pf_XVar_Static_3 = []
+    new_pf_YVar_Static_3 = []
+    for i, k in zip(pf_XVar_Static_3, pf_YVar_Static_3):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XVar_Static_3.append(i)
+            new_pf_YVar_Static_3.append(k)
+
+
+    new_pf_XUnpruned = []
+    new_pf_YUnpruned = []
+    for i, k in zip(pf_XUnpruned, pf_YUnpruned):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XUnpruned.append(i)
+            new_pf_YUnpruned.append(k)
+    new_pf_XUnpruned2 = []
+    new_pf_YUnpruned2 = []
+    for i, k in zip(pf_XUnpruned2, pf_YUnpruned2):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XUnpruned2.append(i)
+            new_pf_YUnpruned2.append(k)
+    new_pf_XUnpruned3 = []
+    new_pf_YUnpruned3 = []
+    for i, k in zip(pf_XUnpruned3, pf_YUnpruned3):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XUnpruned3.append(i)
+            new_pf_YUnpruned3.append(k)
+
+    #plt.plot(new_pf_X, new_pf_Y, label='Pruned')
+    #plt.scatter(newCompr, newPSNR, label='Pruned', alpha =0.2)
+
+    # M: get pareto frontier from all runs
+
+    #Smallify_All_x, Smallify_All_y = generate_Merged_Pareto(new_pf_XSmallify, new_pf_XSmallify_2, new_pf_XSmallify_3,
+    #                                                        new_pf_YSmallify, new_pf_YSmallify_2, new_pf_YSmallify_3)
+    Smallify_All_x, Smallify_All_y = generate_Merged_Pareto(CompressionRatioSmallify, CompressionRatioSmallify_2, CompressionRatioSmallify_3,
+                                                            PSNRSmallify, PSNRSmallify_2, PSNRSmallify_3)
+    plt.plot(new_pf_XSmallify, new_pf_YSmallify, color = 'darkorange', alpha = 0.25)
+    plt.plot(new_pf_XSmallify_2, new_pf_YSmallify_2,  color = 'darkorange', alpha = 0.25)
+    plt.plot(new_pf_XSmallify_3, new_pf_YSmallify_3,  color = 'darkorange', alpha = 0.25)
+    plt.plot(Smallify_All_x, Smallify_All_y, color='darkorange', label='Smallify')
+
+
+    plt.plot(new_pf_XVar_Dynamic, new_pf_YVar_Dynamic, color = 'forestgreen', alpha = 0.25)
+    plt.plot(new_pf_XVar_Dynamic_2, new_pf_YVar_Dynamic_2,  color = 'forestgreen', alpha = 0.25)
+    plt.plot(new_pf_XVar_Dynamic_3, new_pf_YVar_Dynamic_3,  color = 'forestgreen', alpha = 0.25)
+    Var_Dynamic_All_x, Var_Dynamic_All_y = generate_Merged_Pareto(new_pf_XVar_Dynamic, new_pf_XVar_Dynamic_2, new_pf_XVar_Dynamic_3,
+                                                            new_pf_YVar_Dynamic, new_pf_YVar_Dynamic_2, new_pf_YVar_Dynamic_3)
+    plt.plot(Var_Dynamic_All_x, Var_Dynamic_All_y, color='forestgreen', label='Var Dynamic')
+
+
+    plt.plot(new_pf_XVar_Static, new_pf_YVar_Static, color = 'mediumpurple', alpha = 0.25)
+    plt.plot(new_pf_XVar_Static_2, new_pf_YVar_Static_2,  color = 'mediumpurple', alpha = 0.25)
+    plt.plot(new_pf_XVar_Static_3, new_pf_YVar_Static_3, color = 'mediumpurple', alpha = 0.25)
+    Var_Static_All_x, Var_Static_All_y = generate_Merged_Pareto(new_pf_XVar_Static, new_pf_XVar_Static_2, new_pf_XVar_Static_3,
+                                                            new_pf_YVar_Static, new_pf_YVar_Static_2, new_pf_YVar_Static_3)
+    plt.plot(Var_Static_All_x, Var_Static_All_y, color='mediumpurple', label='Var Static')
+
+
+    plt.plot(new_pf_XUnpruned, new_pf_YUnpruned, color = 'crimson', alpha = 0.25)
+    plt.plot(new_pf_XUnpruned2, new_pf_YUnpruned2, color = 'crimson', alpha = 0.25)
+    plt.plot(new_pf_XUnpruned3, new_pf_YUnpruned3, color = 'crimson', alpha = 0.25)
+    Unpruned_All_x, Unpruned_All_y = generate_Merged_Pareto(new_pf_XUnpruned, new_pf_XUnpruned2, new_pf_XUnpruned3,
+                                                            new_pf_YUnpruned, new_pf_YUnpruned2, new_pf_YUnpruned3)
+    plt.plot(Unpruned_All_x, Unpruned_All_y, color='crimson', label='Unpruned')
+
+    #plt.fill_between(new_pf_XUnpruned, new_pf_YUnpruned, 0, color='C0', alpha=0.3,
+    #             interpolate=True)
+
+    plt.xlabel('Compression_Ratio')
+    plt.ylabel('PSNR')
+    plt.legend()
+
+    #print('Pareto-Compressionrates:')
+    #for p in pf_X:
+    #    print(p)
+
+    #filepath = 'plots/' + 'test'
+    filepath = 'plots/LatexFigures/testvol_NAS/Varianz/All'
+    plt.savefig(filepath + '.png')
+    plt.savefig(filepath + '.pdf')
+    tikzplotlib.save(filepath + '.pgf')
+
+
+def generate_Merged_Pareto(list1_x, list2_x, list3_x, list1_y, list2_y, list3_y, upper_limit=400, lower_limit=0):
+
+    Smallify_all_Pareto_Compr = []
+    Smallify_all_Pareto_Compr.extend(list1_x)
+    Smallify_all_Pareto_Compr.extend(list2_x)
+    Smallify_all_Pareto_Compr.extend(list3_x)
+
+    Smallify_all_Pareto_PSNR = []
+    Smallify_all_Pareto_PSNR.extend(list1_y)
+    Smallify_all_Pareto_PSNR.extend(list2_y)
+    Smallify_all_Pareto_PSNR.extend(list3_y)
+
+    pareto_frontSmallify_All = plot_pareto_frontier(Smallify_all_Pareto_Compr, Smallify_all_Pareto_PSNR)
+    pf_XSmallify_All = [pair[0] for pair in pareto_frontSmallify_All]
+    pf_YSmallify_All = [pair[1] for pair in pareto_frontSmallify_All]
+
+    new_pf_XUnpruned = []
+    new_pf_YUnpruned = []
+    for i, k in zip(pf_XSmallify_All, pf_YSmallify_All):
+        if i < upper_limit and i > lower_limit:
+            new_pf_XUnpruned.append(i)
+            new_pf_YUnpruned.append(k)
+
+    return new_pf_XUnpruned, new_pf_YUnpruned
+
+
 def generateParetoFrontier_WithoutWavelet():
-    BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_'
-    experimentNames = np.linspace(0, 52, 53, dtype=int)
+    #BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_'
+    #experimentNames = np.linspace(0, 52, 53, dtype=int)
 
-    #BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
-    #experimentNames = np.linspace(0, 57, 58, dtype=int)
+    BASENAME = 'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_'#'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
+    experimentNames = np.linspace(0, 46, 47, dtype=int)
 
-    BASENAMEOther = 'experiments/WithoutWaveletDecomp/Smallify_2/mhd_p_'
-    experimentNamesOther = [4,6,10,12,27,29,35,40,43,48,49,50,51,52]
+    #BASENAMEOther = 'experiments/WithoutWaveletDecomp/Smallify_2/mhd_p_'
+    #experimentNamesOther = [4,6,10,12,27,29,35,40,43,48,49,50,51,52]
 
-    #BASENAMEOther = 'experiments/WithoutWaveletDecomp/Var_Static_2/mhd_p_'
-    #experimentNamesOther = [1,6,19,40,41,42,43,44]#[2,19,28,30,32,48,49,51,52,53,56,57]
+    BASENAMEOther = 'experiments/WithoutWaveletDecomp/Var_Static_2/mhd_p_'
+    experimentNamesOther = [1,6,19,40,41,42,43,44]#[2,19,28,30,32,48,49,51,52,53,56,57]
 
     BASENAMEOther2 = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_' #'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SearchNWArchitecture/mhd_p_'
     experimentNamesOther2 = np.linspace(0, 57, 58, dtype=int)#np.linspace(0, 54, 55, dtype=int)
@@ -312,7 +636,7 @@ def generateParetoFrontier_WithoutWavelet():
     #    print(p)
 
     #filepath = 'plots/' + 'test_Smallify'
-    filepath = 'plots/LatexFigures/WaveletNoWavelet/Smallify'
+    filepath = 'plots/LatexFigures/WaveletNoWavelet/Variational_Static_2'
     plt.savefig(filepath + '.png')
     plt.savefig(filepath + '.pdf')
     tikzplotlib.save(filepath + '.pgf')
@@ -535,6 +859,7 @@ def curve_quality_control_plot():
 if __name__ == '__main__':
     #generateParetoFrontier()
     #generateParetoFrontier_WithoutWavelet()
+    generateParetoFrontier_With_Variance()
     #WeightHistogramm()
-    HyperparamAnalysis()
+    #HyperparamAnalysis()
     #curve_quality_control_plot()

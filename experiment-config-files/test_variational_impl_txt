@@ -1,7 +1,6 @@
-expname = Test
-data = datasets/test_vol.npy
-basedir = /experiments/Tests/ImplTests/Variational_Simple/
-Tensorboard_log_dir = runs/Tests/implTestNW/Variational_Simple/
+expname = Test_Smallify_Controlrun
+data = datasets/mhd1024.h5
+basedir = /experiments/Tests/ImplTests/Variational_WaveletScaling/
 
 d_in = 3
 d_out = 1
@@ -13,21 +12,23 @@ checkpoint_path = ''
 embedding_type = fourier
 n_embedding_freq = 2
 
-drop_type = variational
-drop_momentum = 0.1
-drop_threshold = 0.9
+drop_type = smallify
+drop_momentum = 0.025
+drop_threshold = 0.75
 
 wavelet_filter = db2
-grid_features = 16
-grid_size = 32
+grid_features = 22
+grid_size = 17
 
 lr = 0.008
-max_pass = 30
+max_pass = 60
 pass_decay = 20
 lr_decay = 0.2
 
-lambda_drop_loss = 1.0
-lambda_weight_loss = 1.0
+lambda_drop_loss = 5e-09
+lambda_weight_loss = 5e-08
+variational_sigma = -7.0
+weight_dkl_multiplier =  5e-05
 
-batch_size = 1024
+batch_size = 2048
 sample_size = 16
