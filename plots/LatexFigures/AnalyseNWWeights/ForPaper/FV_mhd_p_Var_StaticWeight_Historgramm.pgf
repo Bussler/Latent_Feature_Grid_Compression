@@ -412,7 +412,7 @@ ytick style={color=black}
 \end{groupplot}
 
 \draw ({$(current bounding box.south west)!0.5!(current bounding box.south east)$}|-{$(current bounding box.south west)!0.95!(current bounding box.north west)$}) node[
-  scale=0.7,
+  scale=0.85,
   anchor=north,
   text=black,
   rotate=0.0
