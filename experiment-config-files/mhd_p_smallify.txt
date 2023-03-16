@@ -1,35 +1,28 @@
-expname = testvol_
-data = datasets/test_vol.npy
-basedir = /experiments/NAS_testVol/Variational_Dynamic_SearchNWArch_3/
-
+expname = Smallify
+data = datasets/mhd1024.h5
+basedir = /experiments/Tests/mhd_p/
 d_in = 3
 d_out = 1
-
+num_workers = 8
+smallify_decay = 0
 n_layers = 4
 n_hidden_size = 32
 checkpoint_path = ''
-
 embedding_type = fourier
 n_embedding_freq = 2
-
 drop_type = smallify
 drop_momentum = 0.025
 drop_threshold = 0.75
-
 wavelet_filter = db2
-grid_features = 16
-grid_size = 15
-
 lr = 0.008
-max_pass = 50
+max_pass = 60
 pass_decay = 20
 lr_decay = 0.2
-
 lambda_drop_loss = 1e-08
 lambda_weight_loss = 1e-08
-
-variational_sigma = -3.2
-weight_dkl_multiplier = 5e-05
-
-batch_size = 1024
+variational_sigma = 0
+weight_dkl_multiplier = 0
+grid_features = 16
+grid_size = 15
+batch_size = 2048
 sample_size = 16

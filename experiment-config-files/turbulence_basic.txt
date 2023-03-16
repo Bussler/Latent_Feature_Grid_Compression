@@ -1,6 +1,6 @@
-expname = testvol_
+expname = basic
 data = datasets/test_vol.npy
-basedir = /experiments/NAS_testVol/Variational_Dynamic_SearchNWArch_3/
+basedir = /experiments/Tests/turbulence/
 
 d_in = 3
 d_out = 1
@@ -12,7 +12,7 @@ checkpoint_path = ''
 embedding_type = fourier
 n_embedding_freq = 2
 
-drop_type = smallify
+drop_type =
 drop_momentum = 0.025
 drop_threshold = 0.75
 

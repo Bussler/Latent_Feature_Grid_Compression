@@ -12,7 +12,7 @@ checkpoint_path = ''
 embedding_type = fourier
 n_embedding_freq = 2
 
-drop_type = smallify
+drop_type = variational_dynamic
 drop_momentum = 0.025
 drop_threshold = 0.75
 pruning_threshold_list = [0.1, 0.8, 0.9]
