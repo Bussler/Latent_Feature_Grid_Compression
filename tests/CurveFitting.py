@@ -128,7 +128,7 @@ def fit_curve():
     #BASENAME = 'experiments/NAS/mhd_p_MaskedStraightThrough_WithFinetuning_SetNWArchitecture/mhd_p_'
     #experimentNames = np.linspace(0, 54, 55, dtype=int)
 
-    pareto_configs, pareto_infos = get_pareto_data(BASENAME, experimentNames)
+    pareto_configs, pareto_infos = get_pareto_data('../'+BASENAME, experimentNames)
     data_list = split_data(pareto_configs, pareto_infos)
 
     # M: curve fitting for linear model
@@ -204,7 +204,7 @@ def fit_model_complexity_curve():
     #BASENAME = 'experiments/NAS/mhd_p_MaskStraightThrough/mhd_p_'
     experimentNames = np.linspace(0, 79, 80, dtype=int)
 
-    pareto_configs, pareto_infos = get_pareto_data(BASENAME, experimentNames)
+    pareto_configs, pareto_infos = get_pareto_data('../'+BASENAME, experimentNames)
     data_list = split_data(pareto_configs, pareto_infos)
 
     # M: Handling the data
