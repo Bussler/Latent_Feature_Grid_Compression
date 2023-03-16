@@ -32,7 +32,7 @@ def setup_model(input_channel, hidden_channel, out_channel, num_layer, embedding
             drop_layer = Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
         if drop_type == 'masked_straight_through':
             drop_layer = MaskedWavelet_Straight_Through_Dropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
-        if drop_type == 'variational':
+        if 'variational' in drop_type:
             drop_layer = VariationalDropout(feature_grid.shape[1:], drop_momentum, drop_threshold)
     else:
         drop_layer = None

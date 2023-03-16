@@ -78,11 +78,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
-    #if args['drop_type'] and args['drop_type'] == 'variational':
-    #    variance_model = Variance_Model()
-    #    variance_model.to(device)
-    #    variance_model.train()
-    #    optimizer.add_param_group({'params': variance_model.parameters()})
+    if args['drop_type'] and 'variational' in args['drop_type'] and 'dynamic' in args['drop_type']:
+        variance_model = Variance_Model()
+        variance_model.to(device)
+        variance_model.train()
+        optimizer.add_param_group({'params': variance_model.parameters()})
 
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
@@ -115,11 +115,13 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
             volume_passes = voxel_seen / dataset.n_voxels
 
             # M: Loss calculation
-            if args['drop_type'] == 'variational':
-                #variational_variance = variance_model(norm_positions)
-                #variational_variance = variational_variance.squeeze(-1)
+            if 'variational' in args['drop_type']:
 
-                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
+                if 'dynamic' in args['drop_type']:
+                    variational_variance = variance_model(norm_positions)
+                    variational_variance = variational_variance.squeeze(-1)
+                else:  # M: static
+                    variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
@@ -142,7 +144,7 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
                 break
 
             # M: Debugging
-            if args['drop_type'] == 'variational':
+            if 'variational' in args['drop_type']:
                 writer.add_scalar("loss", complete_loss, step_iter)
                 writer.add_scalar("volume_loss", mse, step_iter)
                 writer.add_scalar("Log_Likelyhood_loss", Log_Likelyhood, step_iter)
@@ -155,22 +157,21 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Print training statistics:
             if idx % 100 == 0 and verbose:
-                if args['drop_type'] == 'variational':
+                if 'variational' in args['drop_type']:
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, LL: {:.4f}, DKL: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], mse, Log_Likelyhood, Dkl_sum, complete_loss))
 
-                    #valid_fraction = []
-                    #droprates = []
-                    #for module in model.drop.modules():
-                    #    if isinstance(module, VariationalDropout):
-                    #        d, dropr = module.get_valid_fraction()
-                    #        valid_fraction.append(d)
-                    #        droprates.append(dropr)
-                    #writer.add_histogram("droprates_layer1", droprates[0], step_iter)
-                    #writer.add_histogram("droprates_layer2", droprates[1], step_iter)
-                    #writer.add_histogram("droprates_layer3", droprates[2], step_iter)
-                    #writer.add_histogram("droprates_layer4", droprates[3], step_iter)
-                    #print('Valid Fraction: ', valid_fraction)
+                    valid_fraction = []
+                    droprates = []
+                    for module in model.drop.modules():
+                        if isinstance(module, VariationalDropout):
+                            d, dropr = module.get_valid_fraction()
+                            valid_fraction.append(d)
+                            droprates.append(dropr)
+
+                    for idx, droprate in enumerate(droprates):
+                        writer.add_histogram("droprates_layer_"+str(idx), droprate, step_iter)
+                    print('Valid Fraction: ', valid_fraction)
                 else:
                     print('Pass [{:.4f} / {:.1f}]: volume loss: {:.4f}, drop_loss: {:.4f}, complete_loss: {:.4f}'.
                           format(volume_passes, args['max_pass'], vol_loss.item(), d_loss.item(), complete_loss.item()))
@@ -202,7 +203,7 @@ def training(args, verbose=True):
 
     drop_loss = None
     if args['drop_type']:
-        if args['drop_type'] == 'variational':
+        if 'variational' in args['drop_type']:
             drop_loss = VariationalDropoutLoss(size_volume=dataset.n_voxels,
                                                batch_size=args['batch_size']*args['sample_size'],
                                                weight_dkl=args['lambda_drop_loss'],
