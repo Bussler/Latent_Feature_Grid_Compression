@@ -21,7 +21,7 @@ writer = None
 
 
 def evaluate_model_training(model, dataset, volume, zeros, args, verbose=True):
-    psnr, l1_diff, mse, rmse = tiled_net_out(dataset, model, True, gt_vol=volume.cpu(), evaluate=True, write_vols=False)
+    psnr, l1_diff, mse, rmse = tiled_net_out(dataset, model, True, gt_vol=volume.cpu(), evaluate=True, write_vols=True)
 
     info = {}
     num_net_params = 0
@@ -78,11 +78,11 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
     step_iter = 0
     lr_decay_stop = False
 
-    if args['drop_type'] and args['drop_type'] == 'variational':
-        variance_model = Variance_Model()
-        variance_model.to(device)
-        variance_model.train()
-        optimizer.add_param_group({'params': variance_model.parameters()})
+    #if args['drop_type'] and args['drop_type'] == 'variational':
+    #    variance_model = Variance_Model()
+    #    variance_model.to(device)
+    #    variance_model.train()
+    #    optimizer.add_param_group({'params': variance_model.parameters()})
 
     # M: Training Loop
     while int(volume_passes) + 1 < args['max_pass'] and not lr_decay_stop:  # M: epochs
@@ -116,10 +116,10 @@ def solve_model(model_init, optimizer, lr_strategy, loss_criterion, drop_loss,
 
             # M: Loss calculation
             if args['drop_type'] == 'variational':
-                variational_variance = variance_model(norm_positions)
-                variational_variance = variational_variance.squeeze(-1)
+                #variational_variance = variance_model(norm_positions)
+                #variational_variance = variational_variance.squeeze(-1)
 
-                #variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
+                variational_variance = torch.ones_like(predicted_volume).fill_(args['variational_sigma'])  # -7.0, 5e-04
 
                 complete_loss, Log_Likelyhood, mse, Dkl_sum, weight_sum = drop_loss(model, predicted_volume,
                                                                                     ground_truth_volume,
@@ -225,7 +225,6 @@ def training(args, verbose=True):
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, drop_loss, volume,
                         dataset, data_loader, args_first, verbose)
 
-    #zeros = torch.tensor(0, dtype=torch.float32)
     zeros = model.save_dropvalues_on_grid(device)
 
     # M: Finetuning
@@ -236,6 +235,8 @@ def training(args, verbose=True):
 
     model = solve_model(model, optimizer, lrStrategy, loss_criterion, None, volume,
                         dataset, data_loader, args_second, verbose)
+
+    model.remove_drop_layers(device)
 
     info = evaluate_model_training(model, dataset, volume, zeros, args, verbose)
     writer.close()

@@ -69,28 +69,6 @@ class VariationalDropoutLoss(nn.Module):
         return loss, Log_Likelyhood, mse, Dkl_sum, weight_sum
 
 
-def decode_variational_parameter(variational_layer, filter, shape_array):
-    restored_thetas = variational_layer[0].log_thetas.unsqueeze(0).unsqueeze(0)
-    for layer, shape in zip(variational_layer[1:], shape_array):
-        high_freq = layer.log_thetas
-        data = torch.cat([restored_thetas, high_freq.unsqueeze(0)], dim=1)
-        restored_thetas = filter.decode(data.unsqueeze(0), shape)
-    r_thetas = restored_thetas[0]
-
-    restored_variances = variational_layer[0].log_var.unsqueeze(0).unsqueeze(0)
-    for layer, shape in zip(variational_layer[1:], shape_array):
-        high_freq = layer.log_var
-        data = torch.cat([restored_variances, high_freq.unsqueeze(0)], dim=1)
-        restored_variances = filter.decode(data.unsqueeze(0), shape)
-    r_variances = restored_variances[0]
-
-    thetas = torch.exp(r_thetas)  # M: revert the log with exp
-    sigma = torch.exp(r_variances / 2.0)
-    xi = torch.randn_like(thetas)  # M: draw xi from N(0,1)
-    w = thetas + sigma * xi  # M: maybe have to unsqueeze(0)
-    return w
-
-
 class VariationalDropout(DropoutLayer):
     # M: constants from Molchanov variational dropout paper
     k1 = 0.63576
@@ -107,11 +85,6 @@ class VariationalDropout(DropoutLayer):
         self.log_var = torch.nn.Parameter(torch.empty(size).fill_(log_alphas), requires_grad=True)
 
         self.d_mask = None
-
-        #self.scaling = 1  # M: refactor!
-        #if DropoutLayer.i == 2 or DropoutLayer.i == 3:
-        #    self.scaling = 1/2
-        #else: self.scaling = 1/3
 
     @property
     def alphas(self):

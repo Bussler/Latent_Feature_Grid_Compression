@@ -6,7 +6,7 @@ from model.Feature_Embedding import Embedder
 from torch.nn import functional as F
 from model.Dropout_Layer import DropoutLayer
 from wavelet_transform.Torch_Wavelet_Transform import _WaveletFilterNd
-from model.Variational_Dropout_Layer import decode_variational_parameter, VariationalDropout
+from model.Variational_Dropout_Layer import VariationalDropout
 
 
 def SnakeAlt(x):
@@ -115,8 +115,6 @@ class Feature_Grid_Model(nn.Module):
         f_grid = [d.multiply_values_with_dropout(grid, device) for grid, d in zip(self.feature_grid, self.drop)]
         self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
 
-        #self.drop = nn.ModuleList([nn.Identity() for f in f_grid])  # M: remove droplayers
-
         zeros = 0
         for grid in f_grid:
             zeros += (grid.numel() - torch.count_nonzero(grid))
@@ -127,3 +125,15 @@ class Feature_Grid_Model(nn.Module):
         binary_mask_in_floats = binary_mask_in_floats / 32.0
 
         return zeros - binary_mask_in_floats
+
+    def remove_drop_layers(self, device):
+        binary_masks = []
+        for dropl in self.drop:
+            if isinstance(dropl, nn.Identity):
+                return
+            binary_masks.append(dropl.calculate_pruning_mask(device))
+
+        f_grid = [grid * mask for grid, mask in zip(self.feature_grid, binary_masks)]
+        self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in f_grid])
+
+        self.drop = nn.ModuleList([nn.Identity() for d in self.drop])  # M: remove droplayers
