@@ -21,7 +21,7 @@ Datasets and corresponding config files for all experiments can be found in `dat
 2. Generate a config-file for the experiment or use one under `experiment-config-files/`. Descriptions for the different parameters can be generated with `python Feature_Grid_Training.py --help`.
 3. Use `python Feature_Grid_Training.py --config <Path-To-Config-File>` to start training.
 4. During training, [Tensorboard](https://mlflow.org/docs/latest/quickstart.html) tracks the experiment under `runs/`. A checkpoint to the trained model, as well as the config-file and basic information about the training are logged to `experiments/<expname>/`. Also a .vti file for the ground-truth and model-predicted volume will be generated.
-5. Explicit Inference: TODO
+5. A generated model can be inferred again explicitly with `python Feature_Grid_Inference.py --config_path <Path-To-Config-File> --check_path <Path-To-Model-Checkpoint-File>`
 
 ### Perform Hyperparameter Search:
 In order to find the best hyperparameter for each network type and dataset, the [AX MULTI-OBJECTIVE NAS](https://ax.dev/) Algorithm is provided.
