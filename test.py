@@ -4,7 +4,7 @@ import pywt
 import pywt.data
 import matplotlib.pyplot as plt
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
-from model.model_utils import write_dict, setup_model
+from model.model_utils import setup_model
 from visualization.pltUtils import dict_from_file
 import visualization.pltUtils as pu
 
@@ -100,9 +100,9 @@ def analyse_coefficients():
 
 def analyse_paretor_frontier():
     #BASENAME = 'experiments/NAS/mhd_p_Smallify_WithFinetuning_SetNWArchitecture/mhd_p_' #'experiments/NAS/mhd_p_Smallify/mhd_p_'
-    BASENAME = 'experiments/WithoutWaveletDecomp/Var_Static_2/mhd_p_'
-    #experimentNames = np.linspace(0, 52, 53, dtype=int)
-    experimentNames = [1,6,19,40,41,42,43,44]#[4,6,10,12,27,29,35,40,43,48,49,50,51,52]
+    BASENAME = 'experiments/NAS/mhd_p_baseline/mhd_p_'
+    experimentNames = np.linspace(0, 49, 50, dtype=int)
+    #experimentNames = [1,6,19,40,41,42,43,44]#[4,6,10,12,27,29,35,40,43,48,49,50,51,52]
 
     new_base_dir = '/experiments/NAS/mhd_p_MaskStraightThrough_Pateto_Finetuning/'
 
@@ -121,7 +121,6 @@ def analyse_paretor_frontier():
 
 
 def create_parallel_coordinates():
-    import plotly.express as px
     import ast
 
     filename = 'experiments/Test_DiffDropratesPerLayer/Unpruned_Net_TestSet_WithEntropy/Results.txt'
@@ -224,7 +223,7 @@ def HyperparamNWWeights():
 
 
 def fvRunsDiffComprRates():
-    configName = 'experiment-config-files/test.txt'
+    configName = 'experiment-config-files/mhd_p_basic.txt'
     config = dict_from_file(configName)
 
     BASEEXPNAME = '/experiments/QualityControl/LinearControl/Smallify/'
@@ -253,7 +252,7 @@ def fvRunsDiffComprRates():
 
 
 def RatioPruned_With_WithoutWavelets():
-    from CurveFitting import get_pareto_data
+    from tests.CurveFitting import get_pareto_data
     import tikzplotlib
 
     BASENAME = 'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'#'experiments/NAS/mhd_p_Variational_Static_SetNWArchitecture/mhd_p_Variational_Static_SetNWArchitecturemhd_p_' #'experiments/NAS/mhd_p_Variational_Dynamic_WithFinetuning_SetNWArchitecture/mhd_p_'
@@ -307,8 +306,31 @@ def RatioPruned_With_WithoutWavelets():
     pass
 
 
+def test_model_storing():
+    from model.model_utils import store_model_parameters
+
+    checkpoint_path = 'experiments/Tests/ImplTests/Finetuning/Test/model.pth'
+    config_path = 'experiments/Tests/ImplTests/Finetuning/Test/config.txt'
+
+    args = dict_from_file(config_path)
+
+    model = setup_model(args['d_in'], args['n_hidden_size'], args['d_out'], args['n_layers'], args['embedding_type'],
+                        args['n_embedding_freq'], '', args['drop_momentum'], args['drop_threshold'],
+                        args['wavelet_filter'], args['grid_features'], args['grid_size'], checkpoint_path)
+
+    store_model_parameters(model, "test_model_file")
+
+
+def test_model_reading():
+    from model.model_utils import restore_model
+
+    filename = "test_model_file"
+    restore_model(filename)
+
+
+
 if __name__ == '__main__':
-    test_pywavelets()
+    #test_pywavelets()
     #analyse_Wavelet()
     #test_TensorWavelets()
     #analyse_coefficients()
@@ -317,3 +339,6 @@ if __name__ == '__main__':
     #fvRunsDiffComprRates()
 
     #RatioPruned_With_WithoutWavelets()
+
+    test_model_storing()
+    #test_model_reading()
