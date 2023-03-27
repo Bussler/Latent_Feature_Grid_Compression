@@ -53,7 +53,7 @@ def config_parser():
     parser.add_argument('--drop_type', type=str, default='smallify',
                         help='Type of dropout algorithm to use. Options are: <smallify>,')
     parser.add_argument('--drop_momentum', type=float, default=0.025, help='momentum of dropout technique')
-    parser.add_argument('--drop_threshold', type=float, default=0.075, help='threshold of dropout technique')
+    parser.add_argument('--drop_threshold', type=float, default=0.75, help='threshold of dropout technique')
     parser.add_argument('--pruning_threshold_list', type=float, nargs="+", default=None,
                         help='list of different pruning thresholds to handle')
 

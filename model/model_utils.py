@@ -7,6 +7,7 @@ from model.Straight_Through_Dropout import MaskedWavelet_Straight_Through_Dropou
 from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
 from model.Variational_Dropout_Layer import VariationalDropout
 import struct
+import re
 from sklearn.cluster import KMeans
 
 
@@ -73,7 +74,10 @@ def store_model_parameters(model, filename):
     n_layers = model.num_layer
     layer_width = model.hidden_width
     input_dim = model.input_channel
+    input_channel = model.d_in
     output_dim = model.output_channel
+
+    grid_size = model.shape_array[-1][0]
 
     n_grids = len(model.feature_grid)
     feature_size = model.feature_grid[0].shape[0]
@@ -88,7 +92,10 @@ def store_model_parameters(model, filename):
     file.write(struct.pack('B', n_layers))
     file.write(struct.pack('B', layer_width))
     file.write(struct.pack('B', input_dim))
+    file.write(struct.pack('B', input_channel))
     file.write(struct.pack('B', output_dim))
+
+    file.write(struct.pack('B', grid_size))
 
     file.write(struct.pack('B', n_grids))
     file.write(struct.pack('B', feature_size))
@@ -124,7 +131,10 @@ def restore_model(filename):
     n_layers = struct.unpack('B', file.read(1))[0]
     layer_width = struct.unpack('B', file.read(1))[0]
     input_dim = struct.unpack('B', file.read(1))[0]
+    input_channel = struct.unpack('B', file.read(1))[0]
     output_dim = struct.unpack('B', file.read(1))[0]
+
+    grid_size = struct.unpack('B', file.read(1))[0]
 
     n_grids = struct.unpack('B', file.read(1))[0]
     feature_size = struct.unpack('B', file.read(1))[0]
@@ -152,9 +162,30 @@ def restore_model(filename):
 
     # M: read grid params
     for i in range(n_grids):
-        grid_size = 1
+        grid_size_counter = 1
         for elem in grid_sizes[i]:
-            grid_size *= elem
-        read_in_data([(grid_parameters, feature_size * grid_size)])
+            grid_size_counter *= elem
+        read_in_data([(grid_parameters, feature_size * grid_size_counter)])
 
-    pass
+    # M: reconstruct model
+    model = setup_model(input_channel = input_channel, hidden_channel = layer_width, out_channel = output_dim,
+                        num_layer = n_layers, embedding_type = "fourier", n_embedding_freq = 2, drop_type = "",
+                        drop_momentum = 0.025, drop_threshold = 0.75, wavelet_filter = "db2",
+                        grid_features = feature_size, grid_size = grid_size, checkpoint_path = "")
+
+    wdx, bdx, gdx = 0, 0, 0
+    for name, parameters in model.named_parameters():
+        if re.match(r'.*grid.*', name, re.I):
+            w_shape = parameters.data.shape
+            parameters.data = grid_parameters[gdx].view(w_shape)
+            gdx += 1
+        if re.match(r'.*.weight', name, re.I):
+            w_shape = parameters.data.shape
+            parameters.data = net_weights[wdx].view(w_shape)
+            wdx += 1
+        if re.match(r'.*.bias', name, re.I):
+            b_shape = parameters.data.shape
+            parameters.data = net_biases[bdx].view(b_shape)
+            bdx += 1
+
+    return model

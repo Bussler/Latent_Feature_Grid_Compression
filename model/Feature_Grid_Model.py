@@ -38,6 +38,7 @@ class Feature_Grid_Model(nn.Module):
         self.hidden_width = hidden_channel
         self.output_channel = out_channel
         self.num_layer = num_layer
+        self.d_in = input_channel_data
 
         self.net_layers = nn.ModuleList(
             [nn.Linear(self.input_channel, self.hidden_width)] +
