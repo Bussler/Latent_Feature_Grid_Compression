@@ -67,6 +67,33 @@ def get_net_weights_biases(net):
     return weights, biases
 
 
+def binary_writing(mask_string, filename):
+    n_bytes = len(mask_string) // 8
+    the_bytes = bytearray()
+    for b in range(n_bytes):
+        bin_val = mask_string[8*b:8*b+8]
+        the_bytes.append(int(bin_val,2))
+
+    with open(filename, "wb") as file:
+        file.write(the_bytes)
+
+        if len(mask_string) % 8 != 0:
+            bin_val = mask_string[(8*n_bytes):]
+            bin_val = bin_val + '0' * (8 - len(bin_val))
+            barr = bytearray([int(bin_val, 2)])
+            file.write(barr)
+
+
+def read_binary(filename, num_bits):
+    with open(filename, "rb") as file:
+        b_size = (num_bits // 8) + 1 if num_bits % 8 != 0 else num_bits // 8
+
+        inds = file.read(b_size)
+        bits = ''.join(format(byte, '0' + str(8) + 'b') for byte in inds)
+        file.close()
+        return bits
+
+
 def store_model_parameters(model, filename):
     # M: basic information
     file = open(filename, 'wb')
@@ -115,10 +142,19 @@ def store_model_parameters(model, filename):
         file.write(struct.pack(bias_format, *cur_bias))
 
     # M: grid params
+    mask_string = ""
+
     for grid_elem in model.feature_grid:
+        # M: TODO: delete 0 elements from grid
+
         grid_elem = grid_elem.data.reshape(-1).tolist()
         elem_format = ''.join(['f' for _ in range(len(grid_elem))])
         file.write(struct.pack(elem_format, *grid_elem))
+
+        for g_elem in grid_elem:
+            mask_string = mask_string + "1" if g_elem != 0.0 else mask_string + "0"
+
+    binary_writing(mask_string, filename+"_mask.bnr")
 
     file.flush()
     file.close()
@@ -161,11 +197,22 @@ def restore_model(filename):
     read_in_data([(net_weights, output_dim * layer_width), (net_biases, output_dim)])
 
     # M: read grid params
+    elements_in_grid = []
+    all_elements = 0
     for i in range(n_grids):
         grid_size_counter = 1
         for elem in grid_sizes[i]:
             grid_size_counter *= elem
-        read_in_data([(grid_parameters, feature_size * grid_size_counter)])
+        all_elements += feature_size * grid_size_counter
+        elements_in_grid.append(feature_size * grid_size_counter)
+
+    mask_reconstructed = read_binary(filename + "_mask.bnr", all_elements)
+
+    for length in elements_in_grid:
+        read_in_data([(grid_parameters, length)])
+
+    # M: TODO insert pruned 0 into grid Tensors:
+
 
     # M: reconstruct model
     model = setup_model(input_channel = input_channel, hidden_channel = layer_width, out_channel = output_dim,
