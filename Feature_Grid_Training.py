@@ -45,6 +45,8 @@ def config_parser():
     parser.add_argument('--n_hidden_size', type=int, default=32, help='size of hidden layers in network')
     parser.add_argument('--n_layers', type=int, default=4, help='number of layers for the network')
     parser.add_argument('--checkpoint_path', type=str, default='', help='checkpoint from where to load model')
+    parser.add_argument('--binary_checkpoint_path', type=str, default='',
+                        help='binary checkpoint file from where to load model')
 
     parser.add_argument('--embedding_type', type=str, default='fourier',
                         help='periodic functions to use for frequency embedding')

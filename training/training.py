@@ -2,17 +2,13 @@ import torch
 import os
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from model.Feature_Grid_Model import Feature_Grid_Model
-from model.Feature_Embedding import FourierEmbedding
 from data.IndexDataset import get_tensor, IndexDataset
 import training.learning_rate_decay as lrdecay
 from data.Interpolation import trilinear_f_interpolation, finite_difference_trilinear_grad
-from model.Smallify_Dropout import SmallifyDropout, SmallifyLoss
+from model.Smallify_Dropout import SmallifyLoss
 from model.Variational_Dropout_Layer import VariationalDropoutLoss, Variance_Model, VariationalDropout
-from model.Dropout_Layer import DropoutLayer
 from visualization.OutputToVTK import tiled_net_out
-from model.model_utils import write_dict, setup_model
-from wavelet_transform.Torch_Wavelet_Transform import WaveletFilter3d
+from model.model_utils import write_dict, setup_model, store_model_parameters
 from copy import deepcopy
 
 
@@ -62,6 +58,9 @@ def evaluate_model_training(model, dataset, volume, zeros, args, verbose=True):
 
     torch.save(model.state_dict(), os.path.join(ExperimentPath, 'model.pth'))
     args['checkpoint_path'] = os.path.join(ExperimentPath, 'model.pth')
+
+    store_model_parameters(model, os.path.join(ExperimentPath, 'binary_model_file'))
+    args['binary_checkpoint_path'] = os.path.join(ExperimentPath, 'binary_model_file')
 
     write_dict(info, 'info.txt', ExperimentPath)
     write_dict(args, 'config.txt', ExperimentPath)
