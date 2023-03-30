@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 from model.Feature_Grid_Model import Feature_Grid_Model
 from model.Feature_Embedding import FourierEmbedding
 from model.Smallify_Dropout import SmallifyDropout
@@ -109,8 +110,10 @@ def store_model_parameters(model, filename):
     n_grids = len(model.feature_grid)
     feature_size = model.feature_grid[0].shape[0]
     grid_sizes = []
+    zeroes = []
     for grid in model.feature_grid:
-        grid_sizes.append(torch.numel(grid))
+        grid_sizes.append(torch.count_nonzero(grid))
+        zeroes.append(torch.numel(grid) - torch.count_nonzero(grid))
 
     # M: header
     file.write(struct.pack('B', n_layers))
@@ -125,6 +128,8 @@ def store_model_parameters(model, filename):
     file.write(struct.pack('B', feature_size))
     for grid in grid_sizes:
         file.write(struct.pack('I', grid))
+    for zero in zeroes:
+        file.write(struct.pack('I', zero))
 
     # M: model params
     net_weights, net_biases = get_net_weights_biases(model)
@@ -141,14 +146,18 @@ def store_model_parameters(model, filename):
     mask_string = ""
 
     for grid_elem in model.feature_grid:
-        # M: TODO: delete 0 elements from grid
+        grid_elem = grid_elem.data.reshape(-1)
 
-        grid_elem = grid_elem.data.reshape(-1).tolist()
-        elem_format = ''.join(['f' for _ in range(len(grid_elem))])
-        file.write(struct.pack(elem_format, *grid_elem))
-
+        # M: generate mask
         for g_elem in grid_elem:
             mask_string = mask_string + "1" if g_elem != 0.0 else mask_string + "0"
+
+        # M: delete 0 elements from grid
+        nonzero_indices = torch.nonzero(grid_elem)
+        grid_elem = grid_elem[nonzero_indices].squeeze().tolist()
+        #grid_elem = grid_elem.data.reshape(-1).tolist()
+        elem_format = ''.join(['f' for _ in range(len(grid_elem))])
+        file.write(struct.pack(elem_format, *grid_elem))
 
     binary_writing(mask_string, filename+"_mask.bnr")
 
@@ -171,19 +180,26 @@ def restore_model(filename):
     n_grids = struct.unpack('B', file.read(1))[0]
     feature_size = struct.unpack('B', file.read(1))[0]
     grid_sizes = []
+    zeros = []
     for i in range(n_grids):
         size = struct.unpack('I', file.read(4))[0]
         grid_sizes.append(size)
+    for i in range(n_grids):
+        zero = struct.unpack('I', file.read(4))[0]
+        zeros.append(zero)
 
-    # M: read model params
     net_weights, net_biases, grid_parameters = [], [], []
 
-    def read_in_data(storage: [()]):  # M: give list of target list and number of elements as tuple and read from file
+    def read_in_data(storage: [()], convert_to_Tensor=True):  # M: give list of target list and number of elements as tuple and read from file
         for tuple_element in storage:
             format_str = ''.join(['f' for _ in range(tuple_element[1])])
-            read_data = torch.FloatTensor(struct.unpack(format_str, file.read(4 * tuple_element[1])))
+            if convert_to_Tensor:
+                read_data = torch.FloatTensor(struct.unpack(format_str, file.read(4 * tuple_element[1])))
+            else:
+                read_data = np.array(struct.unpack(format_str, file.read(4 * tuple_element[1])))
             tuple_element[0].append(read_data)
 
+    # M: read model params
     read_in_data([(net_weights, input_dim * layer_width), (net_biases, layer_width)])
 
     for i in range(n_layers-1):
@@ -192,13 +208,21 @@ def restore_model(filename):
     read_in_data([(net_weights, output_dim * layer_width), (net_biases, output_dim)])
 
     # M: read grid params
-    all_elements = sum(grid_sizes)
+    all_elements = sum(grid_sizes) + sum(zeros)
     mask_reconstructed = read_binary(filename + "_mask.bnr", all_elements)
 
     for length in grid_sizes:
-        read_in_data([(grid_parameters, length)])
+        read_in_data([(grid_parameters, length)], convert_to_Tensor=False)
 
-    # M: TODO insert pruned 0 into grid Tensors:
+    # M: insert pruned 0 into grid Tensors:
+    tensor_grid_params = []
+    mask_pointer = 0
+    for cur_size, cur_zeros, cur_array in zip(grid_sizes, zeros, grid_parameters):
+        for i in range(cur_size+cur_zeros):
+            if mask_reconstructed[mask_pointer] == '0':
+                cur_array = np.insert(cur_array, i, 0.0)
+            mask_pointer += 1
+        tensor_grid_params.append(torch.tensor(cur_array, dtype=torch.float32))
 
 
     # M: reconstruct model
@@ -211,7 +235,7 @@ def restore_model(filename):
     for name, parameters in model.named_parameters():
         if re.match(r'.*grid.*', name, re.I):
             w_shape = parameters.data.shape
-            parameters.data = grid_parameters[gdx].view(w_shape)
+            parameters.data = tensor_grid_params[gdx].view(w_shape)
             gdx += 1
         if re.match(r'.*.weight', name, re.I):
             w_shape = parameters.data.shape
@@ -221,5 +245,7 @@ def restore_model(filename):
             b_shape = parameters.data.shape
             parameters.data = net_biases[bdx].view(b_shape)
             bdx += 1
+
+    file.close()
 
     return model

@@ -309,8 +309,8 @@ def RatioPruned_With_WithoutWavelets():
 def test_model_storing():
     from model.model_utils import store_model_parameters
 
-    checkpoint_path = 'experiments/Tests/ImplTests/Finetuning/Test/model.pth'
-    config_path = 'experiments/Tests/ImplTests/Finetuning/Test/config.txt'
+    checkpoint_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/model.pth'#'experiments/Tests/ImplTests/Finetuning/Test/model.pth'
+    config_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/config.txt'#'experiments/Tests/ImplTests/Finetuning/Test/config.txt'
 
     args = dict_from_file(config_path)
 
@@ -323,11 +323,51 @@ def test_model_storing():
 
 def test_model_reading():
     from model.model_utils import restore_model
+    from visualization.OutputToVTK import tiled_net_out
+    from data.IndexDataset import get_tensor, IndexDataset
 
     filename = "test_model_file"
-    restore_model(filename)
+    config_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/config.txt'
+
+    args = dict_from_file(config_path)
+
+    model = restore_model(filename)
+
+    volume = get_tensor(args['data'])
+    dataset = IndexDataset(volume, args['sample_size'])
+    psnr, l1_diff, mse, rmse = tiled_net_out(dataset, model, True, gt_vol=volume.cpu(), evaluate=True, write_vols=True)
 
 
+def test_binary_writing():
+    test_string = '10010011'
+    test_string_2 = '10100011010'
+
+    n_bytes = len(test_string) // 8
+    the_bytes = bytearray()
+    for b in range(n_bytes):
+        bin_val = test_string[8*b:8*b+8] #test_string[8*b:] if b==(n_bytes-1) else
+        the_bytes.append(int(bin_val,2))
+
+    with open("test_mask.bnr", "wb") as f:
+        f.write(the_bytes)
+
+        if len(test_string) % 8 != 0:
+            bin_val = test_string[(8*n_bytes):]
+            bin_val = bin_val + '0' * (8 - len(bin_val))
+            barr = bytearray([int(bin_val, 2)])
+            f.write(barr)
+
+    pass
+
+
+def test_read_binary():
+    with open("test_mask.bnr", "rb") as file:
+        test_string = '100100110001'
+        b_size = (len(test_string) // 8) + 1 if len(test_string) % 8 != 0 else len(test_string) // 8
+
+        inds = file.read(b_size)
+        bits = ''.join(format(byte, '0' + str(8) + 'b') for byte in inds)
+        pass
 
 if __name__ == '__main__':
     #test_pywavelets()
@@ -340,5 +380,7 @@ if __name__ == '__main__':
 
     #RatioPruned_With_WithoutWavelets()
 
-    test_model_storing()
-    #test_model_reading()
+    #test_model_storing()
+    test_model_reading()
+    #test_binary_writing()
+    #test_read_binary()
