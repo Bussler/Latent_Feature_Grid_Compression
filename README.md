@@ -1,8 +1,10 @@
 # Latent_Feature_Grid_Compression
 
-[**FV-SRN**](https://github.com/shamanDevel/fV-SRN) | [**Smallify**](https://github.com/mitdbg/fastdeepnets) | [**Variational Dropout**](https://arxiv.org/pdf/1506.02557.pdf)
+[**Master's Thesis**](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf)
 
-Project for my master's thesis to research possibilities of compressing networks based on latent feature grids.
+Project for my master's thesis to research possibilities of compressing Scene Representation Networks based on latent feature grids with network pruning algorithms.
+
+The network is based on [FV-SRN](https://github.com/shamanDevel/fV-SRN). Besides a binary masking pruning, the pruning algorithms of [Smallify](https://github.com/mitdbg/fastdeepnets) and [Variational Dropout](https://arxiv.org/pdf/1506.02557.pdf) are implemented.
 
 ## Quick Start
 
