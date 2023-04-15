@@ -10,6 +10,7 @@ from model.Variational_Dropout_Layer import VariationalDropout
 import struct
 import re
 from sklearn.cluster import KMeans
+from typing import List, Tuple
 
 
 def write_dict(dictionary, filename, experiment_path=''):
@@ -190,7 +191,7 @@ def restore_model(filename):
 
     net_weights, net_biases, grid_parameters = [], [], []
 
-    def read_in_data(storage: [()], convert_to_Tensor=True):  # M: give list of target list and number of elements as tuple and read from file
+    def read_in_data(storage: List[Tuple], convert_to_Tensor=True):  # M: give list of target list and number of elements as tuple and read from file
         for tuple_element in storage:
             format_str = ''.join(['f' for _ in range(tuple_element[1])])
             if convert_to_Tensor:

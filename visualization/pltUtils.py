@@ -31,6 +31,9 @@ def dict_from_file(filename):
         line = line.replace('\n', '')
         lineParts = line.split('=')
 
+        if len(lineParts) <= 1:
+            continue
+
         value = lineParts[1]
 
         # M: parse int, float, list or string
