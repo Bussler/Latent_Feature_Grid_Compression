@@ -38,8 +38,8 @@ The Search-Space for each experiment can be configured in `Multi_Objective_NAS.p
 ## Project Structure
 - Parsing of arguments, as well as the entry points to training and inference are implemented in `Feature_Grid_Training.py` and `Feature_Grid_Inference.py`.
 - The initialization of the network, as well as training is implemented in `training/training.py`.
-- Model utilities, such as network setup and storage are implemented in `training/model_utils.py`.
-- The basic model architecture can be found in `model/NeurcompModel.py` and `model/SirenLayer.py`.
+- Model utilities, such as network setup and storage are implemented in `model/model_utils.py`.
+- The basic model architecture can be found in `model/Feature_Grid_Model.py` and `model/Feature_Embedding.py`.
 - The pruning algorithms are implemented in `model/Smallify_Dropout.py`, `model/Straight_Through_Dropout.py` and `model/Variational_Dropout_Layer.py`.
 - Data input is handled in the classes in `data/`
 

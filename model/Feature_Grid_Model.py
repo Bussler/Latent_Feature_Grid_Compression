@@ -22,7 +22,7 @@ class Feature_Grid_Model(nn.Module):
         self.filter = wavelet_filter
 
         features, shapes = self.encode_volume(feature_grid)
-        self.feature_grid = nn.ParameterList(values=[nn.Parameter(f, requires_grad=True) for f in features])
+        self.feature_grid = nn.ParameterList([nn.Parameter(f, requires_grad=True) for f in features])
         self.shape_array = shapes
 
         if drop_layer is None:
