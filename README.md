@@ -3,6 +3,8 @@
 [**Master's Thesis**](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf)
 
 Project for my master's thesis to research possibilities of compressing Scene Representation Networks based on latent feature grids with network pruning algorithms.
+The aim is to use the pruning algorithms for identifying the network parameters most important to the reconstruction quality and eliminating the less significant ones.
+This enables the network to learn a good tradeoff between compression ratio and reconstruction quality.
 
 The network is based on [FV-SRN](https://github.com/shamanDevel/fV-SRN). Besides a binary masking pruning, the pruning algorithms of [Smallify](https://github.com/mitdbg/fastdeepnets) and [Variational Dropout](https://arxiv.org/pdf/1506.02557.pdf) are implemented.
 
@@ -44,4 +46,19 @@ The Search-Space for each experiment can be configured in `Multi_Objective_NAS.p
 - Data input is handled in the classes in `data/`
 
 ## Results
-TODO
+All experiments are performed on the `datasets\mhd1024.h5`(255, 255, 255) and `datasets\test_vol.npy`(150,150,150) datasets.
+The fv-SRN, as well as Neurcomp are able to outperform state of the art compression algorithms, like TTHRESH.
+
+<img src="plots\baseline_comparisons.JPG" alt="example" width="1000" >
+
+Pruning works best when performed on large, open networks, where singular nodes have relatively low influence on the reconstruction quality.
+Pruning is performed on the latent feature grid of the fV-SRN and is able to significantly improve the reconstruction quality of the network by up to 5 PSNR points.
+
+<img src="plots\baseline_prunings.JPG" alt="example" width="1000" >
+
+The wavelet transformation is able to further enhance the effectiveness of the pruning algorithms.
+This is because most of the latent feature information of the fV-SRN feature grid are encoded into just a few wavelet coefficients, enabling the pruning algorithms to easily distinguish between important and unimportant parameters.
+
+<img src="plots\wavelet_gain.JPG" alt="example" width="1000" >
+
+For a more extensive review, see the pdf of the [Master's thesis](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf).
