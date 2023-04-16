@@ -37,8 +37,8 @@ table {%
 156.636422033082 40.60107421875
 143.56790337244 40.6889572143555
 };
-\addlegendentry{Pareto Frontier MaskedStraightThrough}
-\addplot [semithick, darkorange25512714]
+\addlegendentry{Binary Dropout}
+\addplot [semithick, crimson2143940]
 table {%
 513.657414578235 33.8192825317383
 461.503938322803 34.4734344482422
@@ -53,7 +53,7 @@ table {%
 62.3756258675625 43.3703651428223
 };
 \addlegendentry{Baseline Unpruned}
-\addplot [semithick, forestgreen4416044]
+\addplot [semithick, darkorange25512714]
 table {%
 504.284389160914 36.4085998535156
 418.711017398551 36.7062835693359
@@ -67,8 +67,8 @@ table {%
 177.601137495582 40.9404945373535
 146.270542779263 41.4328918457031
 };
-\addlegendentry{Pareto Frontier Smallify}
-\addplot [semithick, crimson2143940]
+\addlegendentry{Smallify}
+\addplot [semithick, forestgreen4416044]
 table {%
 558.05118971494 35.803092956543
 491.139924765262 36.3380393981934
@@ -82,7 +82,7 @@ table {%
 185.69624718623 40.2175598144531
 136.644292813172 41.4657821655273
 };
-\addlegendentry{Pareto Frontier Variational Dynamic}
+\addlegendentry{Variational Dynamic}
 \addplot [semithick, mediumpurple148103189]
 table {%
 592.509380025013 36.2326736450195
@@ -93,7 +93,7 @@ table {%
 235.849157243439 37.8610038757324
 146.270542779263 37.9596977233887
 };
-\addlegendentry{Pareto Frontier Variational Static}
+\addlegendentry{Variational Static}
 \end{axis}
 
 \end{tikzpicture}

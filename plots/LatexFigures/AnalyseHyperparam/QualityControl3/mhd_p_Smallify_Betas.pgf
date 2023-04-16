@@ -61,7 +61,7 @@ table {%
 6.63746494924223 -16.8049586118174
 6.68461172766793 -16.6965994542399
 };
-\addlegendentry{Fitted Curve}
+\addlegendentry{Predicted}
 \end{axis}
 
 \end{tikzpicture}
