@@ -309,8 +309,8 @@ def RatioPruned_With_WithoutWavelets():
 def test_model_storing():
     from model.model_utils import store_model_parameters
 
-    checkpoint_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/model.pth'#'experiments/Tests/ImplTests/Finetuning/Test/model.pth'
-    config_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/config.txt'#'experiments/Tests/ImplTests/Finetuning/Test/config.txt'
+    checkpoint_path = 'experiments/Tests/turbulence/basic/model.pth'
+    config_path = 'experiments/Tests/turbulence/basic/config.txt'
 
     args = dict_from_file(config_path)
 
@@ -327,7 +327,7 @@ def test_model_reading():
     from data.IndexDataset import get_tensor, IndexDataset
 
     filename = "test_model_file"
-    config_path = 'experiments/ImplTests/SmallifyZeroTest/testvol_/config.txt'
+    config_path = 'experiments/Tests/turbulence/basic/config.txt'
 
     args = dict_from_file(config_path)
 
@@ -368,6 +368,101 @@ def test_read_binary():
         inds = file.read(b_size)
         bits = ''.join(format(byte, '0' + str(8) + 'b') for byte in inds)
         pass
+    
+
+def test_kmeans_writing():
+    #print("Cuda: ", torch.cuda.is_available())
+    import math
+    import struct
+    from sklearn.cluster import KMeans
+    
+    def kmeans_quantization(w,q):
+        weight_feat = w
+        kmeans = KMeans(n_clusters=q,n_init=4).fit(weight_feat)
+        return kmeans.labels_.tolist(),kmeans.cluster_centers_.reshape(q).tolist()
+    
+    def ints_to_bits_to_bytes(all_ints,n_bits):
+        f_str = '#0'+str(n_bits+2)+'b'
+        bit_string = ''.join([format(v, f_str)[2:] for v in all_ints])
+        n_bytes = len(bit_string)//8
+        the_leftover = len(bit_string)%8>0
+        if the_leftover:
+            n_bytes+=1
+        the_bytes = bytearray()
+        for b in range(n_bytes):
+            bin_val = bit_string[8*b:] if b==(n_bytes-1) else bit_string[8*b:8*b+8]
+            the_bytes.append(int(bin_val,2))
+        return the_bytes,the_leftover
+    
+    
+    data = torch.randn(20, 20, 20)
+    #print(data)
+    
+    filename = 'test_writing_kmeans'
+    file = open(filename, 'wb')
+    
+    bit_precision = 9
+    n_clusters = int(math.pow(2, bit_precision))
+    
+    # M: encode:
+    weights_writing = 0
+    
+    weight_feat = data.view(-1).unsqueeze(1).numpy()
+    
+    labels, centers = kmeans_quantization(weight_feat, n_clusters)
+    
+    # weights
+    w = centers
+    w_format = ''.join(['f' for _ in range(len(w))])
+    weights_writing += file.write(struct.pack(w_format, *w))
+    weight_bin, is_leftover = ints_to_bits_to_bytes(labels, bit_precision)
+    weights_writing += file.write(weight_bin)
+
+    # encode non-pow-2 as 16-bit integer
+    if bit_precision % 8 != 0:
+        weights_writing += file.write(struct.pack('I', labels[-1]))
+    
+    file.flush()
+    file.close()
+    
+    
+    # M: Opening again and reading
+    file = open(filename,'rb')
+    
+    n_weights = data.numel()
+    weight_size = (n_weights*bit_precision)//8
+    if (n_weights*bit_precision)%8 != 0:
+        weight_size+=1
+    c_format = ''.join(['f' for _ in range(n_clusters)])
+    centers = torch.FloatTensor(struct.unpack(c_format, file.read(4*n_clusters)))
+    inds = file.read(weight_size)
+    bits = ''.join(format(byte, '0'+str(8)+'b') for byte in inds)
+    w_inds = torch.LongTensor([int(bits[bit_precision*i:bit_precision*i+bit_precision],2) for i in range(n_weights)])
+
+    if bit_precision%8 != 0:
+        next_bytes = file.read(4)
+        w_inds[-1] = struct.unpack('I', next_bytes)[0]
+        
+        
+    w_quant = centers[w_inds]
+    all_ws=[w_quant]
+    
+    file.close()
+    
+    
+    def calculate_deviation_statistics(prediction, ground_truth):
+        diff_vol = ground_truth - prediction
+        sqd_max_diff = (torch.max(ground_truth) - torch.min(ground_truth)) ** 2  # M: max für tthresh anpassen!!
+        l1_diff = torch.mean(torch.abs(diff_vol))
+        mse = torch.mean(torch.pow(diff_vol, 2.0))
+        psnr = 10 * torch.log10(sqd_max_diff / mse)
+        print('PSNR:', psnr, 'l1:', l1_diff, 'mse:', mse, 'rmse:', torch.sqrt(mse))
+        return psnr.item(), l1_diff.item(), mse.item(), torch.sqrt(mse).item()
+    
+    calculate_deviation_statistics(w_quant.view(data.shape), data)
+    
+    pass
+
 
 if __name__ == '__main__':
     #test_pywavelets()
@@ -381,6 +476,9 @@ if __name__ == '__main__':
     #RatioPruned_With_WithoutWavelets()
 
     #test_model_storing()
-    test_model_reading()
+    #test_model_reading()
+    
     #test_binary_writing()
     #test_read_binary()
+    
+    test_kmeans_writing()
