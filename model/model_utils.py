@@ -10,6 +10,7 @@ from model.Variational_Dropout_Layer import VariationalDropout
 import struct
 import re
 from sklearn.cluster import KMeans
+import math
 from typing import List, Tuple
 
 
@@ -69,6 +70,26 @@ def get_net_weights_biases(net):
     return weights, biases
 
 
+def kmeans_quantization(w,q):
+        weight_feat = w
+        kmeans = KMeans(n_clusters=q,n_init=4).fit(weight_feat)
+        return kmeans.labels_.tolist(),kmeans.cluster_centers_.reshape(q).tolist()
+    
+    
+def ints_to_bits_to_bytes(all_ints,n_bits):
+        f_str = '#0'+str(n_bits+2)+'b'
+        bit_string = ''.join([format(v, f_str)[2:] for v in all_ints])
+        n_bytes = len(bit_string)//8
+        the_leftover = len(bit_string)%8>0
+        if the_leftover:
+            n_bytes+=1
+        the_bytes = bytearray()
+        for b in range(n_bytes):
+            bin_val = bit_string[8*b:] if b==(n_bytes-1) else bit_string[8*b:8*b+8]
+            the_bytes.append(int(bin_val,2))
+        return the_bytes,the_leftover
+
+
 def binary_writing(mask_string, filename):
     n_bytes = len(mask_string) // 8
     the_bytes = bytearray()
@@ -97,6 +118,7 @@ def read_binary(filename, num_bits):
 
 
 def store_model_parameters(model, filename):
+    
     # M: basic information
     file = open(filename, 'wb')
 
@@ -115,6 +137,9 @@ def store_model_parameters(model, filename):
     for grid in model.feature_grid:
         grid_sizes.append(torch.count_nonzero(grid))
         zeroes.append(torch.numel(grid) - torch.count_nonzero(grid))
+        
+    bit_precision = 8 # TODO: extract this into user-variable
+    n_clusters = int(math.pow(2, bit_precision))
 
     # M: header
     file.write(struct.pack('B', n_layers))
@@ -122,6 +147,7 @@ def store_model_parameters(model, filename):
     file.write(struct.pack('B', input_dim))
     file.write(struct.pack('B', input_channel))
     file.write(struct.pack('B', output_dim))
+    file.write(struct.pack('B', bit_precision))
 
     file.write(struct.pack('B', grid_size))
 
@@ -134,14 +160,42 @@ def store_model_parameters(model, filename):
 
     # M: model params
     net_weights, net_biases = get_net_weights_biases(model)
-    for cur_weigth, cur_bias in zip(net_weights, net_biases):
-        cur_weigth = cur_weigth.view(-1).tolist()
-        weight_format = ''.join(['f' for _ in range(len(cur_weigth))])
-        file.write(struct.pack(weight_format, *cur_weigth))
+    
+    first_weight, first_bias = net_weights[0].view(-1).tolist(), net_biases[0].view(-1).tolist()
+    weight_format = ''.join(['f' for _ in range(len(first_weight))])
+    file.write(struct.pack(weight_format, *first_weight))
+    bias_format = ''.join(['f' for _ in range(len(first_bias))])
+    file.write(struct.pack(bias_format, *first_bias))
+    
+    def write_tensor_quantized(cur_weigth):
+        cur_weigth = cur_weigth.view(-1).unsqueeze(1).numpy()
+        labels, centers = kmeans_quantization(cur_weigth, n_clusters)
+        w = centers
+        w_format = ''.join(['f' for _ in range(len(w))])
+        file.write(struct.pack(w_format, *w))
+        weight_bin, is_leftover = ints_to_bits_to_bytes(labels, bit_precision)
+        file.write(weight_bin)
 
+        # encode non-pow-2 as 16-bit integer
+        if bit_precision % 8 != 0:
+            file.write(struct.pack('I', labels[-1]))
+        
+    
+    for cur_weigth, cur_bias in zip(net_weights[1:-1], net_biases[1:-1]):   
+             
+        # M: quantize weights prior to writing
+        write_tensor_quantized(cur_weigth)
+
+        # M: bias
         cur_bias = cur_bias.view(-1).tolist()
         bias_format = ''.join(['f' for _ in range(len(cur_bias))])
         file.write(struct.pack(bias_format, *cur_bias))
+    
+    last_weight, last_bias = net_weights[-1].view(-1).tolist(), net_biases[-1].view(-1).tolist()
+    weight_format = ''.join(['f' for _ in range(len(last_weight))])
+    file.write(struct.pack(weight_format, *last_weight))
+    bias_format = ''.join(['f' for _ in range(len(last_bias))])
+    file.write(struct.pack(bias_format, *last_bias))
 
     # M: grid params
     mask_string = ""
@@ -155,10 +209,9 @@ def store_model_parameters(model, filename):
 
         # M: delete 0 elements from grid
         nonzero_indices = torch.nonzero(grid_elem)
-        grid_elem = grid_elem[nonzero_indices].squeeze().tolist()
-        #grid_elem = grid_elem.data.reshape(-1).tolist()
-        elem_format = ''.join(['f' for _ in range(len(grid_elem))])
-        file.write(struct.pack(elem_format, *grid_elem))
+        grid_elem = grid_elem[nonzero_indices].squeeze()
+        # M: quantize grid elements prior to writing
+        write_tensor_quantized(grid_elem)
 
     binary_writing(mask_string, filename+"_mask.bnr")
 
@@ -175,6 +228,9 @@ def restore_model(filename):
     input_dim = struct.unpack('B', file.read(1))[0]
     input_channel = struct.unpack('B', file.read(1))[0]
     output_dim = struct.unpack('B', file.read(1))[0]
+    
+    bit_precision = struct.unpack('B', file.read(1))[0]
+    n_clusters = int(math.pow(2, bit_precision))
 
     grid_size = struct.unpack('B', file.read(1))[0]
 
@@ -191,7 +247,8 @@ def restore_model(filename):
 
     net_weights, net_biases, grid_parameters = [], [], []
 
-    def read_in_data(storage: List[Tuple], convert_to_Tensor=True):  # M: give list of target list and number of elements as tuple and read from file
+    # M: give list of target list and number of elements as tuple and read from file
+    def read_in_data(storage: List[Tuple], convert_to_Tensor=True):
         for tuple_element in storage:
             format_str = ''.join(['f' for _ in range(tuple_element[1])])
             if convert_to_Tensor:
@@ -199,12 +256,35 @@ def restore_model(filename):
             else:
                 read_data = np.array(struct.unpack(format_str, file.read(4 * tuple_element[1])))
             tuple_element[0].append(read_data)
+            
+    def read_in_data_quantized(storage: List, n_weights: int, convert_to_Tensor=True):
+        weight_size = (n_weights*bit_precision)//8
+        if (n_weights*bit_precision)%8 != 0:
+            weight_size+=1
+        c_format = ''.join(['f' for _ in range(n_clusters)])
+        centers = torch.FloatTensor(struct.unpack(c_format, file.read(4*n_clusters)))
+        inds = file.read(weight_size)
+        bits = ''.join(format(byte, '0'+str(8)+'b') for byte in inds)
+        w_inds = torch.LongTensor([int(bits[bit_precision*i:bit_precision*i+bit_precision],2) for i in range(n_weights)])
+
+        if bit_precision%8 != 0:
+            next_bytes = file.read(4)
+            w_inds[-1] = struct.unpack('I', next_bytes)[0]
+            
+        w_quant = centers[w_inds]
+        
+        if not convert_to_Tensor:
+            w_quant = w_quant.numpy()        
+        
+        storage.append(w_quant)
 
     # M: read model params
     read_in_data([(net_weights, input_dim * layer_width), (net_biases, layer_width)])
 
     for i in range(n_layers-1):
-        read_in_data([(net_weights, layer_width * layer_width), (net_biases, layer_width)])
+        read_in_data_quantized(net_weights, layer_width * layer_width)
+        # M: read in unquantized bias
+        read_in_data([(net_biases, layer_width)])
 
     read_in_data([(net_weights, output_dim * layer_width), (net_biases, output_dim)])
 
@@ -213,7 +293,7 @@ def restore_model(filename):
     mask_reconstructed = read_binary(filename + "_mask.bnr", all_elements)
 
     for length in grid_sizes:
-        read_in_data([(grid_parameters, length)], convert_to_Tensor=False)
+        read_in_data_quantized(grid_parameters, length, convert_to_Tensor=False)
 
     # M: insert pruned 0 into grid Tensors:
     tensor_grid_params = []
