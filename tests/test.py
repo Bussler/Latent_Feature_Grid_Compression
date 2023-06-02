@@ -426,7 +426,7 @@ def test_kmeans_writing():
     file.close()
     
     
-    # M: Opening again and reading
+    #! M: Opening again and reading
     file = open(filename,'rb')
     
     n_weights = data.numel()
@@ -475,10 +475,10 @@ if __name__ == '__main__':
 
     #RatioPruned_With_WithoutWavelets()
 
-    #test_model_storing()
+    test_model_storing()
     #test_model_reading()
     
     #test_binary_writing()
     #test_read_binary()
     
-    test_kmeans_writing()
+    #test_kmeans_writing()
