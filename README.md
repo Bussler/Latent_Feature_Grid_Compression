@@ -1,6 +1,6 @@
 # Latent_Feature_Grid_Compression
 
-[**Project**]([https://bussler.github.io/latent-feature-grid-encoding/](https://bussler.github.io/#/latentfeaturegridcompression)) | [**Master's Thesis**](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf)
+[**Project**](https://bussler.github.io/#/latentfeaturegridcompression) | [**Master's Thesis**](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf)
 
 Project for my master's thesis to research possibilities of compressing Scene Representation Networks based on latent feature grids with network pruning algorithms.
 The aim is to use the pruning algorithms for identifying the network parameters most important to the reconstruction quality and eliminating the less significant ones.
