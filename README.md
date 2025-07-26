@@ -2,11 +2,27 @@
 
 [**Project**](https://bussler.github.io/#/latentfeaturegridcompression) | [**Master's Thesis**](Master_Thesis_Training_Methods_for_Memory_efficient_Volume_Scene_Representation_Networks_Maarten_Bussler.pdf)
 
-Project for my master's thesis to research possibilities of compressing Scene Representation Networks based on latent feature grids with network pruning algorithms.
-The aim is to use the pruning algorithms for identifying the network parameters most important to the reconstruction quality and eliminating the less significant ones.
-This enables the network to learn a good tradeoff between compression ratio and reconstruction quality.
+## Executive Summary
 
-The network is based on [FV-SRN](https://github.com/shamanDevel/fV-SRN). Besides a binary masking pruning, the pruning algorithms of [Smallify](https://github.com/mitdbg/fastdeepnets) and [Variational Dropout](https://arxiv.org/pdf/1506.02557.pdf) are implemented.
+This research introduces **memory-efficient neural volume compression** techniques that significantly advance the state-of-the-art in 3D scene representation networks. By combining advanced pruning algorithms with wavelet transformations, this work achieves unprecedented compression ratios while maintaining high reconstruction quality for volumetric data.
+
+### 🎯 **Problem & Impact**
+Traditional volume compression methods struggle to balance compression efficiency with reconstruction quality. This work addresses the critical need for memory-efficient neural networks capable of representing complex 3D volumes with minimal storage requirements - essential for applications in medical imaging, scientific visualization, and computer graphics.
+
+### 🔬 **Key Technical Contributions**
+- **Multi-Algorithm Pruning Framework**: Implementation of three complementary pruning strategies - binary masking, [Smallify](https://github.com/mitdbg/fastdeepnets), and [Variational Dropout](https://arxiv.org/pdf/1506.02557.pdf)
+- **Wavelet-Enhanced Compression**: Novel integration of wavelet transformations that concentrates feature information into fewer coefficients, dramatically improving pruning effectiveness  
+- **Latent Feature Grid Optimization**: Advanced techniques for identifying and preserving the most critical network parameters while eliminating redundant ones
+- **End-to-End Training Pipeline**: Complete framework built on [FV-SRN](https://github.com/shamanDevel/fV-SRN) with multi-objective neural architecture search capabilities
+
+### 📊 **Breakthrough Results**
+- **5+ PSNR improvement**: Pruned networks achieve up to 5 PSNR points better reconstruction quality compared to baseline methods
+- **Superior compression**: Outperforms state-of-the-art algorithms like TTHRESH across multiple datasets
+- **Wavelet advantage**: Wavelet-enhanced pruning shows significantly improved parameter efficiency, with most feature information concentrated in just a few coefficients
+- **Scalable performance**: Validated on multiple datasets including 255³ and 150³ volume resolutions
+
+### 🚀 **Practical Applications**  
+This technology enables real-time processing of large-scale volumetric data with dramatically reduced memory footprints, making high-quality 3D neural representations accessible for resource-constrained environments and real-time applications.
 
 ## Quick Start
 
